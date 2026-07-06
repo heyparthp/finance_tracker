@@ -690,7 +690,8 @@ function parseExpenseText(text) {
   for (const p of ap) { const m = text.match(p); if (m) { r.amount = parseFloat(m[1].replace(/,/g, '')); break; } }
   const vp = [
     /at\s+([A-Z][A-Za-z0-9&._\- ]{2,30}?)(?:\s+on|\s+via|\.|,|$)/,
-    /to\s+([A-Z][A-Za-z0-9&._\- ]{2,30}?)(?:\s+on|\s+via|\.|,|$)/
+    /to\s+([A-Z][A-Za-z0-9&._\- ]{2,30}?)(?:\s+on|\s+via|\.|,|$)/,
+    /;\s*([A-Za-z0-9&._\- ]{2,30}?)\s+credited\b/i
   ];
   for (const p of vp) { const m = text.match(p); if (m) { r.vendor = m[1].trim(); break; } }
   const dm = text.match(/\b(\d{1,2}[-\/][A-Za-z]{3,9}[-\/]\d{2,4})\b/) || text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
@@ -701,10 +702,10 @@ function parseExpenseText(text) {
   else if (/credit card/.test(lo)) r.mode = 'credit card';
   else if (/debit card/.test(lo)) r.mode = 'debit card';
   else if (/net\s*banking/.test(lo)) r.mode = 'net banking';
-  const l4 = text.match(/(?:ending|xx+|\*{2,})\s*(\d{4})\b/i);
+  const l4 = text.match(/(?:ending|xx+|\*{2,}|x|card|a\/c\s*\*?)\s*:?\s*(\d{4})\b/i);
   if (l4) r.last4 = l4[1];
   
-  const bankMatch = text.match(/\b(hdfc|icici|sbi|axis|amex|rupay|paytm|airtel|kotak|idfc|yesbank|rbl|pnb|bob|cbi)\b/i);
+  const bankMatch = text.match(/\b(hdfc|icici|sbi|axis|amex|rupay|paytm|airtel|kotak|idfc|yesbank|rbl|pnb|bob|cbi|canara|unity|slice)\b/i);
   if (bankMatch) {
     r.bank = bankMatch[1].toUpperCase();
   }
@@ -1925,7 +1926,12 @@ async function syncTelegram(simulate = false) {
   }
 
   try {
-    const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates?timeout=10`);
+    let offset = localStorage.getItem('tg_offset') || '0';
+    let url = `https://api.telegram.org/bot${token}/getUpdates?timeout=10`;
+    if (parseInt(offset) > 0) {
+      url += `&offset=${offset}`;
+    }
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to connect to Telegram API');
     const data = await res.json();
     if (!data.ok) throw new Error(data.description || 'Error fetching telegram messages');
@@ -1941,6 +1947,11 @@ async function syncTelegram(simulate = false) {
 
 function processTelegramUpdates(updates) {
   $('tgSyncingIndicator').style.display = 'none';
+  
+  if (updates.length > 0) {
+    const highestId = Math.max(...updates.map(u => u.update_id));
+    localStorage.setItem('tg_offset', String(highestId + 1));
+  }
   
   let processedIds = JSON.parse(localStorage.getItem('processedTgUpdates') || '[]');
   
@@ -2456,6 +2467,29 @@ function bindEvents() {
         if (chevron) chevron.style.transform = 'rotate(0deg)';
       }
     });
+  }
+
+  // Telegram Setup instructions OS toggle (iOS vs Android)
+  const tgSetupOsSeg = $('tgSetupOsSeg');
+  if (tgSetupOsSeg) {
+    const iosBtn = tgSetupOsSeg.querySelector('button[data-os="ios"]');
+    const androidBtn = tgSetupOsSeg.querySelector('button[data-os="android"]');
+    const iosContent = $('tgSetupIos');
+    const androidContent = $('tgSetupAndroid');
+    if (iosBtn && androidBtn && iosContent && androidContent) {
+      iosBtn.addEventListener('click', () => {
+        iosBtn.classList.add('on');
+        androidBtn.classList.remove('on');
+        iosContent.style.display = 'block';
+        androidContent.style.display = 'none';
+      });
+      androidBtn.addEventListener('click', () => {
+        androidBtn.classList.add('on');
+        iosBtn.classList.remove('on');
+        iosContent.style.display = 'none';
+        androidContent.style.display = 'block';
+      });
+    }
   }
 
   // Nexora add transaction scroll
