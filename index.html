@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>The Ledger</title>
+  
+  <!-- Preconnect and Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- External Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- PDF.js library for in-browser PDF text parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <!-- JavaScript Code (Defer Load) -->
+  <script defer src="app.js"></script>
+</head>
+<body>
+<div class="app-wrap">
+  <header class="page-head">
+    <div class="brand-row">
+      <div class="brand">
+        <h1>The Ledger</h1>
+        <div class="brand-meta">
+          <p>track what goes out</p>
+        </div>
+      </div>
+      
+      <!-- Header action icons -->
+      <div class="top-accounts-widget" style="padding: 6px 10px; gap: 6px">
+        <button id="openAccountBtn" title="Account" style="display:flex; align-items:center; justify-content:center; padding:4px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </button>
+        <button id="openHistoryBtn" title="Past Records" style="display:flex; align-items:center; justify-content:center; padding:4px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </button>
+        <button class="top-settings-btn" id="topSettingsBtn" title="Go to Settings" style="display:flex; align-items:center; justify-content:center; padding:4px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ LEDGER TAB ═══ -->
+  <main class="tab-panel active" id="tab-ledger">
+
+    <!-- Nexora Header Layout -->
+    <div class="nexora-header" style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:20px; margin-top:10px">
+      <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); display:flex; align-items:center; gap:8px">
+        <button id="monthPrevBtn" title="Previous month" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--ink-soft);font-weight:bold;line-height:1">‹</button>
+        <span id="hSpendLbl">Spent July</span>
+        <button id="monthNextBtn" title="Next month" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--ink-soft);font-weight:bold;line-height:1">›</button>
+      </div>
+      <div id="hSpend" style="font-size:36px; font-weight:800; color:var(--ink); margin:6px 0 16px 0; font-family:var(--serif)">₹0.00</div>
+      
+      <!-- Nexora CTA Row -->
+      <div style="display:flex; gap:12px; width:100%; justify-content:center; margin-bottom:20px">
+        <button id="nexoraAddBtn" class="btn-nexora-lime" style="display:flex; align-items:center; gap:8px; background:var(--lime); color:#0B0E11; border:none; padding:12px 24px; border-radius:50px; font-size:13px; font-weight:800; cursor:pointer; transition:transform 0.15s, opacity 0.15s; outline:none">
+          <span style="font-size:16px; font-weight:900; line-height:1">+</span> Add Transaction
+        </button>
+        <button id="manageInstrBtn" class="btn-nexora-purple" onclick="switchTab('cards')" style="display:flex; align-items:center; gap:8px; background:var(--brass); color:#FFF; border:none; padding:12px 24px; border-radius:50px; font-size:13px; font-weight:800; cursor:pointer; transition:transform 0.15s, opacity 0.15s; outline:none">
+          💳 Instruments
+        </button>
+      </div>
+      
+      <!-- Nexora Summary Tiles (Income & Expense style) -->
+      <div class="nexora-stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%">
+        <!-- Spent Card -->
+        <div class="nexora-stat-card" style="background:var(--card); border:1.5px solid var(--line); border-radius:20px; padding:14px 16px; text-align:left; position:relative; overflow:hidden">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-soft); letter-spacing:0.04em">Month Spends</div>
+          <div id="hSpendSubVal" style="font-size:20px; font-weight:800; margin-top:6px; color:var(--ink)">₹0.00</div>
+          <div style="font-size:10px; font-weight:700; color:var(--green); margin-top:4px; display:flex; align-items:center; gap:2px">
+            <span>↑</span> 100% active
+          </div>
+        </div>
+        
+        <!-- Cashback Card (Toggles with Points) -->
+        <div class="nexora-stat-card" id="cashbackPill" style="background:var(--card); border:1.5px solid var(--line); border-radius:20px; padding:14px 16px; text-align:left; position:relative; overflow:hidden; cursor:pointer">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div id="hCashLbl" style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-soft); letter-spacing:0.04em">Cashback</div>
+            <button id="rewardToggleBtn" title="Toggle Cashback / Points" style="background:var(--line); border:none; cursor:pointer; font-size:9px; font-weight:800; color:var(--ink-soft); padding:2px 7px; border-radius:50px; line-height:1.6; letter-spacing:.04em; transition:background 0.18s">PTS</button>
+          </div>
+          <div id="hCash" style="font-size:20px; font-weight:800; margin-top:6px; color:var(--brass)">₹0.00</div>
+          <div style="font-size:10px; font-weight:700; color:var(--green); margin-top:4px; display:flex; align-items:center; gap:2px">
+            <span id="hCashTrend">↑</span> active rewards
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="margin-bottom:12px">
+        <div class="seg" id="entryModeSeg">
+          <button class="on" data-mode="manual">Add entry</button>
+          <button data-mode="paste">Paste &amp; go</button>
+          <button data-mode="sync">Sync Gmail</button>
+          <button data-mode="telegram">🤖 Sync Telegram</button>
+        </div>
+      </div>
+
+      <!-- paste box -->
+      <div id="pasteBox" style="display:none;margin-bottom:12px">
+        <div class="field">
+          <label for="pasteText">Paste bank SMS or email alert</label>
+          <textarea id="pasteText" placeholder="e.g. Rs.450.00 debited from a/c **1234 at SWIGGY via UPI on 01-Jul-26"></textarea>
+        </div>
+        <div class="btn-row">
+          <span class="info-msg" id="parseHint">I'll extract amount, merchant, mode, card — then you confirm.</span>
+          <button class="btn ghost sm" id="detectBtn">Detect</button>
+        </div>
+      </div>
+
+      <!-- sync box -->
+      <div id="syncBox" style="display:none;margin-bottom:12px;text-align:center;padding:12px 0;border:1.5px dashed var(--line);border-radius:var(--r);background:var(--paper)">
+        <div style="font-weight:600;margin-bottom:10px" id="webGmailStatusText">Gmail Sync Disconnected</div>
+        <button class="btn accent sm" id="syncGmailBtnInline">Sync Gmail now</button>
+      </div>
+
+      <!-- telegram box -->
+      <div id="telegramBox" style="display:none;margin-bottom:12px;padding:16px;border:1.5px dashed var(--line);border-radius:var(--r);background:var(--paper)">
+        <div style="font-weight:700;margin-bottom:6px;font-size:13px;color:var(--brass)">🤖 Telegram Bot Syncer</div>
+        <p class="small-hint" style="margin-bottom:12px;line-height:1.5">
+          Retrieves transaction SMS alerts forwarded by your iOS Shortcuts to your Telegram Bot. Configure Bot Token in settings first.
+        </p>
+        <div class="btn-row" style="gap:10px">
+          <button class="btn sm" id="syncTelegramBtnInline">Sync Telegram bot</button>
+          <button class="btn ghost sm" id="simulateTelegramBtnInline">Simulate Telegram alert</button>
+        </div>
+        <div id="tgSyncingIndicator" style="display:none;margin-top:12px;align-items:center;gap:8px">
+          <span class="spinner" style="font-size:14px">⏳</span>
+          <span style="font-size:12px;color:var(--ink-soft)">Fetching updates from Telegram Bot API...</span>
+        </div>
+        <!-- list of detected TG messages -->
+        <div id="tgAlertsList" style="margin-top:16px;display:none;gap:10px;flex-direction:column">
+          <div style="font-size:11px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em">Pending Telegram Transactions</div>
+          <div id="tgAlertsContainer" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+      <!-- main fields -->
+      <div class="g4" style="gap:12px">
+        <div class="field">
+          <label for="fAmt">Amount</label>
+          <input id="fAmt" type="number" step="0.01" placeholder="0.00"/>
+        </div>
+        <div class="field">
+          <label for="fVendor">Vendor / note <span id="detBadge" class="badge brass" style="display:none">detected</span></label>
+          <input id="fVendor" type="text" placeholder="e.g. Swiggy"/>
+        </div>
+        <div class="field">
+          <label for="fCat">Category</label>
+          <select id="fCat"></select>
+        </div>
+        <div class="field">
+          <label for="fDate">Date</label>
+          <input id="fDate" type="date"/>
+        </div>
+      </div>
+
+      <!-- subcategory -->
+      <div class="fsubcat-wrap" id="fSubcatWrap">
+        <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+          <div class="field" style="flex:1;min-width:160px">
+            <label for="fSubcat">Subcategory <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-faint)">— optional</span></label>
+            <select id="fSubcat">
+              <option value="">— general / none —</option>
+            </select>
+          </div>
+          <div id="fSubcatAddWrap" style="display:none;flex:1;min-width:180px">
+            <div class="field">
+              <label for="fSubcatNewName">New subcategory name</label>
+              <div style="display:flex;gap:8px">
+                <input id="fSubcatNewName" type="text" placeholder="e.g. Snacks" style="flex:1"/>
+                <button class="btn sm" id="saveSubcatBtn">Add</button>
+                <button class="btn ghost sm" id="cancelSubcatBtn">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- mcc chip -->
+      <div id="mccChipWrap" style="display:none">
+        <div class="mcc-chip" id="mccChipInner">
+          <span id="mccChipIco"></span><span id="mccChipLbl"></span><span class="x">▾ change</span>
+        </div>
+      </div>
+      <div id="mccOverride" style="display:none;margin-top:8px">
+        <select id="mccSelect" style="max-width:280px" aria-label="Select MCC group override"></select>
+      </div>
+
+      <!-- merchant assign prompt (for unknown merchants) -->
+      <div class="merchant-assign" id="merchantAssign">
+        <div class="ma-head">📍 Unknown merchant — assign an MCC so we remember it</div>
+        <div class="ma-row" style="flex-wrap:wrap;gap:8px">
+          <select id="maMccSelect" style="flex:1;min-width:140px" aria-label="Assign merchant MCC"></select>
+          <input type="text" id="maMccCode" maxlength="4" placeholder="MCC code (opt.)" title="Optional 4-digit MCC code" style="width:120px;font-family:var(--mono);font-size:13px;padding:8px 9px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper)"/>
+          <button class="btn sm ma-save" id="maSaveBtn">Save</button>
+          <button class="btn ghost sm" id="maDismissBtn">Skip</button>
+        </div>
+      </div>
+
+      <!-- payment mode + instrument -->
+      <div class="g2" style="margin-top:12px;gap:12px">
+        <div class="field">
+          <label for="fMode">Payment mode</label>
+          <select id="fMode">
+            <option value="upi">UPI</option>
+            <option value="credit">Credit Card</option>
+            <option value="debit">Debit Card</option>
+            <option value="cash">Cash</option>
+            <option value="netbanking">Net Banking</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div id="instrWrap"></div><!-- dynamically filled -->
+      </div>
+
+      <div class="cb-pre" id="cbPre"></div>
+
+      <div class="btn-row" style="margin-top:12px">
+        <span class="err-msg" id="entryErr"></span>
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+          <button class="link-btn" id="manageInstrLink">Manage instruments</button>
+          <button class="btn" id="saveEntryBtn">Save entry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Spend Pie Chart -->
+    <div class="card" style="margin-top:16px; padding:16px">
+      <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin-bottom:12px">
+        📊 Category Spends Distribution
+      </div>
+      <div id="pieChartContainer"></div>
+    </div>
+
+    <!-- breakdown -->
+    <section>
+      <div class="sec-eye">Spending by category</div>
+      <div id="breakdown" class="card"></div>
+    </section>
+
+    <!-- cashback summary -->
+    <section>
+      <div class="sec-eye" id="cbEye">Cashback this month</div>
+      <div id="cbSummary"></div>
+    </section>
+
+    <!-- filters -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px">
+      <input type="text" id="searchQ" placeholder="Search vendor…" style="flex:1;min-width:110px"/>
+      <select id="catFilter" style="flex:0 0 auto" aria-label="Filter by Category"></select>
+      <input type="month" id="monthFilter" aria-label="Filter by Month"/>
+    </div>
+
+    <div class="table-scroll-wrapper">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Vendor</th>
+            <th>Category</th>
+            <th>MCC</th>
+            <th>Mode</th>
+            <th>Instrument</th>
+            <th class="r">Amount</th>
+            <th class="r">CB %</th>
+            <th class="r">Cashback</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ledgerBody"></tbody>
+      </table>
+    </div>
+    <div id="ledgerEmpty" class="empty" style="display:none">No entries yet.</div>
+    
+    <div style="text-align:center;margin-top:24px">
+      <button class="link-btn" style="color:var(--ink-soft)" id="clearAllDataBtn">Clear all data</button>
+    </div>
+  </main>
+
+  <!-- ═══ CARDS / INSTRUMENTS TAB ═══ -->
+  <div class="tab-panel" id="tab-cards">
+
+    <!-- ── Credit Cards Section ── -->
+    <div class="instr-section">
+      <div class="bokeh-bg-wrapper">
+        <div class="bokeh-light" style="background:var(--brass); top:10%; left:20%"></div>
+        <div class="bokeh-light" style="background:var(--lime); bottom:10%; right:20%"></div>
+      </div>
+      <div class="instr-sec-head" style="position:relative; z-index:3">
+        <div>
+          <div class="instr-sec-title">💳 Credit Cards</div>
+          <div class="instr-sec-sub" id="creditCardCount">—</div>
+        </div>
+        <button class="btn sm" id="addCreditCardBtn" data-cardtype="Credit">+ Add</button>
+      </div>
+      <div class="card-tile-track" id="creditCardTrack">
+        <div class="card-tile-empty" id="creditCardEmpty">No credit cards added yet.</div>
+      </div>
+    </div>
+
+    <!-- ── Debit Cards Section ── -->
+    <div class="instr-section">
+      <div class="bokeh-bg-wrapper">
+        <div class="bokeh-light" style="background:var(--lime); top:10%; left:20%"></div>
+        <div class="bokeh-light" style="background:var(--brass); bottom:10%; right:20%"></div>
+      </div>
+      <div class="instr-sec-head" style="position:relative; z-index:3">
+        <div>
+          <div class="instr-sec-title">🏧 Debit Cards</div>
+          <div class="instr-sec-sub" id="debitCardCount">—</div>
+        </div>
+        <button class="btn sm" id="addDebitCardBtn" data-cardtype="Debit">+ Add</button>
+      </div>
+      <div class="card-tile-track" id="debitCardTrack">
+        <div class="card-tile-empty" id="debitCardEmpty">No debit cards added yet.</div>
+      </div>
+    </div>
+
+    <!-- ── UPI & Bank Accounts Section ── -->
+    <div class="instr-section">
+      <div class="instr-sec-head">
+        <div>
+          <div class="instr-sec-title">📲 UPI &amp; Accounts</div>
+          <div class="instr-sec-sub" id="upiCount">—</div>
+        </div>
+        <button class="btn sm" id="addUpiBtn">+ Add UPI</button>
+      </div>
+      <div class="card-tile-track" id="upiTrack">
+        <div class="card-tile-empty" id="upiTrackEmpty">No UPI accounts added yet.</div>
+      </div>
+
+      <!-- UPI editor inline -->
+      <div id="upiEditor" style="display:none;margin-top:14px">
+        <div class="card" style="margin:0">
+          <div class="sec-head" style="margin-bottom:10px">
+            <h3 style="font-size:14px;margin:0">UPI Account</h3>
+            <button class="btn ghost sm" id="cancelUpiBtn">Cancel</button>
+          </div>
+          <div class="g3" style="gap:12px">
+            <div class="field" style="grid-column:span 2">
+              <label for="uName">Account / app name</label>
+              <input id="uName" type="text" placeholder="e.g. Google Pay, PhonePe"/>
+            </div>
+            <div class="field">
+              <label for="uId">UPI ID <small>(optional)</small></label>
+              <input id="uId" type="text" placeholder="you@okaxis"/>
+            </div>
+          </div>
+          <div class="btn-row">
+            <span class="err-msg" id="upiErr"></span>
+            <button class="btn sm" id="saveUpiBtn" style="margin-left:auto">Save UPI account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Card Editor (shared for Credit & Debit) ── -->
+    <div class="card" id="cardEditorCard" style="display:none;margin-top:0">
+      <div class="sec-head">
+        <h2 id="cardEditorTitle">New card</h2>
+        <button class="btn ghost sm" id="cancelCardEditorBtn">Cancel</button>
+      </div>
+      <div class="field-lbl" style="margin-bottom:6px">Quick-fill from template</div>
+      <div class="tpl-row" id="tplRow"></div>
+      <div class="dashed"></div>
+      
+      <!-- Auto-Parse Terms Section -->
+      <div style="background:var(--paper-rule); border:1.5px dashed var(--brass); border-radius:12px; padding:14px; margin-bottom:16px">
+        <h3 style="font-family:var(--serif); font-size:13px; color:var(--brass); margin-bottom:4px; display:flex; align-items:center; gap:6px; margin-top:0">
+          ✨ Auto-fill from Terms &amp; Conditions
+        </h3>
+        <p class="small-hint" style="margin-bottom:10px; font-size:11px">Upload a benefits PDF or paste terms &amp; conditions text to auto-detect rewards structure, exclusions, and MCC rules.</p>
+        
+        <div style="display:flex; flex-direction:column; gap:10px">
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+            <div style="flex:1; min-width:180px">
+              <label for="cTermsFile" style="font-size:11px; font-weight:700; color:var(--ink-soft); display:block; margin-bottom:4px">Upload T&amp;C PDF</label>
+              <input id="cTermsFile" type="file" accept="application/pdf" style="font-size:11px; border:none; background:transparent; padding:0; width:100%" />
+            </div>
+            <div style="padding-top:16px">
+              <button type="button" class="btn ghost sm" id="toggleTermsTextBtn" style="font-size:11px; padding:6px 10px">Paste Text Instead</button>
+            </div>
+          </div>
+          
+          <div id="cTermsTextBox" style="display:none; flex-direction:column; gap:8px">
+            <label for="cTermsText" style="font-size:11px; font-weight:700; color:var(--ink-soft)">Paste Terms Text</label>
+            <textarea id="cTermsText" placeholder="Paste credit card reward rules or cashback terms here..." rows="4" style="width:100%; font-size:12px; background:var(--card); color:var(--ink); border:1.5px solid var(--line); border-radius:var(--r); padding:8px; font-family:monospace; box-sizing:border-box"></textarea>
+            <div style="display:flex; justify-content:flex-end">
+              <button type="button" class="btn sm" id="parseTermsTextBtn" style="font-size:11px; padding:6px 12px">Parse Pasted Text</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dashed"></div>
+      <div class="g4" style="gap:12px">
+        <div class="field">
+          <label for="cBank">Bank</label>
+          <select id="cBank">
+            <option value="HDFC">HDFC</option>
+            <option value="ICICI">ICICI</option>
+            <option value="SBI">SBI</option>
+            <option value="Axis">Axis</option>
+            <option value="AMEX">AMEX</option>
+            <option value="RuPay">RuPay</option>
+            <option value="Nexora">Nexora (FlexPay)</option>
+            <option value="Other">Other...</option>
+          </select>
+          <input id="cBankCustom" type="text" placeholder="e.g. Kotak" style="display:none;margin-top:6px"/>
+        </div>
+        <div class="field">
+          <label for="cName">Card name</label>
+          <input id="cName" type="text" placeholder="e.g. Millennia"/>
+        </div>
+        <div class="field">
+          <label for="cLast4">Last 4 digits</label>
+          <input id="cLast4" type="text" maxlength="4" placeholder="1234"/>
+        </div>
+        <div class="field">
+          <label for="cNetwork">Network</label>
+          <select id="cNetwork">
+            <option>Visa</option>
+            <option>Mastercard</option>
+            <option>Amex</option>
+            <option>RuPay</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin:12px 0">
+        <div class="field-lbl" style="margin-bottom:6px">Card type</div>
+        <div class="seg" id="cTypeSeg">
+          <button class="on" data-type="Credit">Credit</button>
+          <button data-type="Debit">Debit</button>
+        </div>
+      </div>
+      <div class="g2" style="gap:12px; margin-bottom: 12px">
+        <div class="field">
+          <label for="cRewardType">Reward type</label>
+          <select id="cRewardType">
+            <option value="Cashback">Cashback</option>
+            <option value="Points">Points</option>
+          </select>
+        </div>
+        <div class="field" id="cPointValField" style="display:none">
+          <label for="cPointVal">Point value (INR) <small>(e.g. 0.25)</small></label>
+          <input id="cPointVal" type="number" step="0.01" min="0" value="1.00"/>
+        </div>
+      </div>
+      <div class="g2" style="gap:12px; margin-bottom: 12px">
+        <div class="field">
+          <label for="cDefRate" id="cDefRateLabel">Default rate %</label>
+          <input id="cDefRate" type="number" step="0.1" min="0" max="100" value="1"/>
+        </div>
+        <div class="field">
+          <label for="cCap">Monthly cap <small>(blank = no cap)</small></label>
+          <input id="cCap" type="number" step="1" min="0" placeholder="No cap"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom: 12px">
+        <div class="field">
+          <label for="cMinSpend">Min spend/txn</label>
+          <input id="cMinSpend" type="number" step="1" min="0" placeholder="0" value="100"/>
+        </div>
+        <div class="field">
+          <label for="cStatementDay">Stmt Day (1-31)</label>
+          <input id="cStatementDay" type="number" min="1" max="31" placeholder="15" value="15"/>
+        </div>
+        <div class="field">
+          <label for="cDueDay">Due Day (1-31)</label>
+          <input id="cDueDay" type="number" min="1" max="31" placeholder="5" value="5"/>
+        </div>
+      </div>
+      <div class="dashed"></div>
+      <div class="field-lbl" style="margin-bottom:4px">Cashback by MCC category</div>
+      <p class="small-hint" style="margin-bottom:8px">Set a boosted or excluded rate per MCC group.</p>
+      <div style="overflow-x:auto;">
+        <table class="mcc-rt">
+          <thead>
+            <tr>
+              <th>MCC Category</th>
+              <th>Rate</th>
+              <th style="text-align:center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="mccRateBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <span class="err-msg" id="cardErr"></span>
+        <button class="btn" style="margin-left:auto" id="saveCardBtn">Save card</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══ MERCHANTS TAB ═══ -->
+  <div class="tab-panel" id="tab-merchants">
+    <div class="card">
+      <div class="sec-head">
+        <h2>Merchant database</h2>
+        <span class="info-msg" id="merchantCount"></span>
+      </div>
+      <p class="small-hint" style="margin-bottom:12px">Each merchant stores an MCC group and optional 4-digit MCC code. Auto-fills when you type that merchant while adding a transaction.</p>
+      <input type="text" id="merchantSearch" placeholder="🔍 Search merchants…" style="margin-bottom:12px"/>
+      <div id="merchantDbList"></div>
+    </div>
+
+    <!-- Add / Edit form -->
+    <div class="card" id="merchantFormCard">
+      <div class="sec-head">
+        <h2 id="meFormTitle">Add merchant</h2>
+      </div>
+
+      <!-- paste detect -->
+      <div style="margin-bottom:14px;padding:12px;background:var(--paper-rule);border-radius:var(--r);border:1px solid var(--line)">
+        <div class="field-lbl" style="margin-bottom:6px">Paste a bank SMS / email to auto-detect merchant name</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="mePasteInput" placeholder="Paste any payment alert here…" style="flex:1;font-size:13px"/>
+          <button class="btn ghost sm" id="detectMeBtn">Detect</button>
+        </div>
+      </div>
+
+      <div class="g3" style="gap:12px">
+        <div class="field">
+          <label for="meName">Merchant name</label>
+          <input id="meName" type="text" placeholder="e.g. Local Kirana Store"/>
+        </div>
+        <div class="field">
+          <label for="meMcc">MCC group</label>
+          <select id="meMcc"></select>
+        </div>
+        <div class="field">
+          <label for="meMccCode">MCC code <small style="text-transform:none;letter-spacing:0">(4-digit, optional)</small></label>
+          <input id="meMccCode" type="text" maxlength="4" placeholder="e.g. 5812" pattern="\d{4}" style="font-family:var(--mono)"/>
+        </div>
+      </div>
+      <div class="btn-row">
+        <span class="err-msg" id="meErr"></span>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <button class="btn ghost sm" id="cancelMeBtn">Cancel</button>
+          <button class="btn sm" id="saveMeBtn">Save merchant</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CATEGORIES TAB ═══ -->
+  <div class="tab-panel" id="tab-categories">
+    <div class="card">
+      <div class="sec-head">
+        <h2>Spending categories</h2>
+      </div>
+      <p class="small-hint" style="margin-bottom:12px">Link categories to MCC groups for auto-fill when you type a merchant. Click the colour circle to recolour.</p>
+      <div id="catList"></div>
+    </div>
+    <div class="card">
+      <div class="sec-head">
+        <h2 id="catFormTitle">Add category</h2>
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="field">
+          <label for="cfName">Name</label>
+          <input id="cfName" type="text" placeholder="e.g. Fitness"/>
+        </div>
+        <div class="field">
+          <label for="cfColor">Colour</label>
+          <input id="cfColor" type="color" value="#4A708B"/>
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>Link to MCC groups</label>
+        <div id="cfMccCboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px"></div>
+      </div>
+      <div class="btn-row">
+        <span class="err-msg" id="catErr"></span>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <button class="btn ghost sm" id="cancelCatBtn">Cancel</button>
+          <button class="btn sm" id="saveCatBtn">Add category</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SETTINGS TAB ═══ -->
+  <div class="tab-panel" id="tab-settings">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px">
+      <button class="btn ghost sm" id="settingsBackBtn" style="border-radius: 50px; padding: 8px 16px; font-weight: 700">← Back</button>
+      <h2 style="font-size: 18px; margin: 0; font-family: var(--serif)">Settings</h2>
+      <div style="width: 70px"></div>
+    </div>
+    <div class="card" style="margin-top: 0">
+
+      <!-- ── Appearance ── -->
+      <div class="setting-row">
+        <h3>🎨 Appearance</h3>
+        <p style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Switch between dark and light mode.</p>
+        <div style="display:flex; align-items:center; gap:12px">
+          <button id="themeToggleBtn" class="btn ghost sm" style="display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:50px; font-weight:700; font-size:12px">
+            <span id="themeToggleIco">🌙</span>
+            <span id="themeToggleLabel">Dark Mode</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Sync (collapsible) ── -->
+      <div class="setting-row" style="border-top:1px dashed var(--line); margin-top:16px; padding-top:16px">
+        <div id="syncSectionToggle" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none">
+          <h3 style="margin:0">🔄 Sync</h3>
+          <svg id="syncChevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s; color:var(--ink-soft)"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:4px">Gmail, Telegram & sync window settings.</p>
+
+        <div id="syncSectionBody" style="display:none; margin-top:14px">
+
+          <!-- Gmail sync -->
+          <div style="margin-bottom:18px">
+            <h4 style="font-size:13px; font-weight:800; margin-bottom:6px">📧 Gmail sync</h4>
+            <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:8px">Auto-pull bank transaction alerts. Works in iOS Safari via Google sign-in.</p>
+            <div id="gmailStatus"></div>
+            <p class="small-hint" style="margin-bottom:10px">One-time setup — needs a Google Cloud OAuth Client ID:</p>
+            <ol class="setup-steps">
+              <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">console.cloud.google.com</a> → New project</li>
+              <li>APIs &amp; Services → Enable → <strong>Gmail API</strong> and <strong>Google Sheets API</strong></li>
+              <li>Credentials → Create → OAuth 2.0 Client ID → Web application</li>
+              <li>Add this page's URL under "Authorized JavaScript origins"</li>
+              <li>Paste Client ID below and tap Connect</li>
+            </ol>
+            <div class="field" style="margin-top:10px">
+              <label for="gClientId">Google OAuth Client ID</label>
+              <input id="gClientId" type="text" placeholder="xxxxx.apps.googleusercontent.com"/>
+            </div>
+            <div class="field" style="margin-top:10px">
+              <label for="sharedSheetId">Shared Merchant Sheet ID (Optional)</label>
+              <input id="sharedSheetId" type="text" placeholder="1aBcD...eFgHi"/>
+            </div>
+            <div class="btn-row">
+              <button class="btn" id="connectGmailBtn">Connect Gmail</button>
+              <button class="btn ghost" id="syncGmailBtn" style="display:none">Sync now</button>
+              <button class="btn ghost sm danger" id="disconnectBtn" style="display:none">Disconnect</button>
+            </div>
+
+            <div style="margin-top:16px;border-top:1px dashed var(--line);padding-top:14px">
+              <h4>Alternative: Quick Authorization (No Google Cloud setup)</h4>
+              <p class="small-hint" style="margin-bottom:8px">Generate a temporary access token directly from Google:</p>
+              <ol class="setup-steps" style="margin-bottom:10px; font-size:12px">
+                <li>Open the <a href="https://developers.google.com/oauthplayground/" target="_blank" rel="noopener noreferrer">Google OAuth 2.0 Playground</a>.</li>
+                <li>In the left list, select <strong>Gmail API v1</strong> and check <code>https://www.googleapis.com/auth/gmail.readonly</code>.</li>
+                <li>Click <strong>Authorize APIs</strong> and select your Google account.</li>
+                <li>Tap <strong>Exchange authorization code for tokens</strong>.</li>
+                <li>Copy the generated <strong>Access Token</strong> (under Step 2), paste it below, and tap Apply:</li>
+              </ol>
+              <div class="field">
+                <label for="manualTokenInput">Access Token</label>
+                <input id="manualTokenInput" type="password" placeholder="ya29.a0AfB..."/>
+              </div>
+              <button class="btn ghost sm" id="applyManualTokenBtn" style="margin-top:8px">Apply Token</button>
+            </div>
+          </div>
+
+          <!-- Telegram sync -->
+          <div style="border-top:1px dashed var(--line); padding-top:14px; margin-bottom:18px">
+            <h4 style="font-size:13px; font-weight:800; margin-bottom:6px">🤖 Telegram iOS Shortcuts Syncer</h4>
+            <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:8px">iOS workaround: Setup an Apple Automation Shortcut to forward transaction SMS messages to a Telegram Bot, then sync them here.</p>
+
+            <div class="field" style="margin-top:10px">
+              <label for="tgBotToken">Telegram Bot Token</label>
+              <input id="tgBotToken" type="password" placeholder="e.g. 123456789:ABCdefGhIjkLmNoPQrsTUVwxyZ"/>
+            </div>
+
+            <div class="field" style="margin-top:10px">
+              <label for="tgChatId">Telegram Chat ID (Optional)</label>
+              <input id="tgChatId" type="text" placeholder="e.g. 987654321"/>
+            </div>
+
+            <div style="margin-top:12px; background:rgba(220,165,50,0.04); border:1px solid rgba(220,165,50,0.15); padding:12px; border-radius:8px">
+              <h4 style="font-size:12.5px; font-weight:800; color:var(--brass); margin-bottom:8px">📋 Detailed Setup Instructions:</h4>
+
+              <div style="font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.02em">1. Bot & Chat Setup</div>
+              <ol class="setup-steps" style="font-size:11.5px; margin-top:2px; padding-left:16px; color:var(--ink-mid); line-height:1.5; margin-bottom:10px">
+                <li>Open Telegram, search for <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" style="font-weight:700">@BotFather</a> and send <code>/newbot</code> to create a bot. Copy the generated API Token.</li>
+                <li>Search for <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" style="font-weight:700">@userinfobot</a> and start it to get your numeric Chat ID (e.g. 987654321).</li>
+                <li><strong>Important:</strong> Start a chat with your newly created bot (click Start) so it is authorized to send you alerts.</li>
+              </ol>
+
+              <div style="font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.02em">2. iOS Apple Shortcut Setup</div>
+              <ol class="setup-steps" style="font-size:11.5px; margin-top:2px; padding-left:16px; color:var(--ink-mid); line-height:1.5">
+                <li>Open the native iOS <strong>Shortcuts</strong> app and switch to the <strong>Automation</strong> tab.</li>
+                <li>Tap <strong>+</strong> and choose <strong>Message</strong> as the trigger. Set: Sender to <em>Anyone</em>, Message Contains to common keywords (e.g., <code>debited</code>, <code>spent</code>, <code>transaction</code>), and select <strong>Run Immediately</strong>.</li>
+                <li>Tap <strong>New Blank Automation</strong> and add the action: <strong>Get Contents of URL</strong>.</li>
+                <li>Set the URL input to: <code>https://api.telegram.org/bot&lt;API_TOKEN&gt;/sendMessage?chat_id=&lt;CHAT_ID&gt;&amp;text=&lt;Shortcut Input&gt;</code> (replace API_TOKEN and CHAT_ID with your values, and set the text parameter to <em>Shortcut Input</em> -> <em>Message</em> -> <em>Body</em>).</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Sync window -->
+          <div style="border-top:1px dashed var(--line); padding-top:14px">
+            <h4 style="font-size:13px; font-weight:800; margin-bottom:6px">⏱ Sync Window</h4>
+            <div class="field" style="max-width:160px;margin-top:6px">
+              <select id="syncDays" aria-label="Sync window days">
+                <option value="7">7 days</option>
+                <option value="14" selected>14 days</option>
+                <option value="30">30 days</option>
+                <option value="60">60 days</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Export ── -->
+      <div class="setting-row" style="border-top:1px dashed var(--line); margin-top:16px; padding-top:16px">
+        <h3>📊 Export</h3>
+        <div class="btn-row">
+          <button class="btn brass-btn" id="exportSheetsBtn">Export to Google Sheets</button>
+          <button class="btn ghost" id="exportCsvBtn">Download CSV</button>
+        </div>
+      </div>
+
+      <!-- ── Currency ── -->
+      <div class="setting-row" style="border-top:1px dashed var(--line); margin-top:16px; padding-top:16px">
+        <h3>💱 Currency</h3>
+        <div class="g2" style="gap:10px;max-width:200px;margin-top:6px">
+          <div class="field">
+            <input id="currencyInput" type="text" maxlength="3" value="₹" aria-label="Currency symbol"/>
+          </div>
+          <div>
+            <button class="btn sm" id="saveCurrencyBtn">Save</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- bottom nav -->
+<nav class="tab-bar">
+  <button class="tab-btn active" id="nav-ledger">
+    <span class="ico">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    </span>
+    Ledger
+  </button>
+  <button class="tab-btn" id="nav-cards">
+    <span class="ico">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+    </span>
+    Instruments
+  </button>
+  <button class="tab-btn" id="nav-merchants">
+    <span class="ico">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+    </span>
+    Merchants
+  </button>
+  <button class="tab-btn" id="nav-categories">
+    <span class="ico">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+    </span>
+    Categories
+  </button>
+</nav>
+
+<!-- import modal -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <h2>Review detected transactions</h2>
+      <button class="btn ghost sm" id="closeImportModalBtn">✕</button>
+    </div>
+    <div class="modal-body" id="importBody"></div>
+    <div class="modal-foot">
+      <span class="info-msg" id="importCount"></span>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost sm" id="cancelImportBtn">Cancel</button>
+        <button class="btn sm" id="confirmImportBtn">Import selected</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- split modal -->
+<div class="modal-overlay" id="splitModal">
+  <div class="modal-sheet" style="max-width: 400px; margin: auto; border-radius: 16px;">
+    <div class="modal-head">
+      <h2>Split Transaction</h2>
+      <button class="btn ghost sm" id="closeSplitModalBtn">✕</button>
+    </div>
+    <div class="modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="font-size:12px; color:var(--ink-soft); line-height: 1.4" id="splitInfo"></div>
+      
+      <div class="field">
+        <label for="splitAmountInput">Amount to Split Off</label>
+        <input id="splitAmountInput" type="number" step="0.01" placeholder="Enter split amount" style="width: 100%"/>
+      </div>
+      
+      <div class="field">
+        <label for="splitCategorySelect">Split Category</label>
+        <select id="splitCategorySelect" style="width: 100%"></select>
+      </div>
+      
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn" id="confirmSplitBtn" style="width:100%">Confirm Split</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Card Details Modal -->
+<div class="modal-overlay" id="cardDetailsModal">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <h2 id="cdTitle">Card Details</h2>
+      <button class="btn ghost sm" id="closeCardDetailsModalBtn">✕</button>
+    </div>
+    <div class="modal-body" style="padding: 16px; overflow-y: auto;">
+      <!-- Card Replica Preview -->
+      <div id="cdCardPreview" class="card-tile" style="margin: 0 auto 16px auto; width: 100%; box-sizing: border-box; cursor: default; transform: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15)">
+        <div class="card-tile-bank" id="cdPreviewBank">HDFC Bank</div>
+        <div class="card-tile-name" id="cdPreviewName">Millennia</div>
+        <div class="card-tile-number" id="cdPreviewNumber">•••• •••• •••• 1234</div>
+        <div class="card-tile-rate" id="cdPreviewRate">5% cashback</div>
+      </div>
+
+      <!-- Select Statement Cycle -->
+      <div class="field" style="margin-bottom: 16px;">
+        <label for="cdCycleSelect">Billing Cycle</label>
+        <select id="cdCycleSelect" style="width:100%; font-size:14px; padding: 8px; border-radius: var(--r); background: var(--card); border: 1.5px solid var(--line); color: var(--ink)"></select>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="g2" style="gap: 12px; margin-bottom: 16px">
+        <div style="background: var(--paper-rule); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px">
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--ink-soft)">Cycle Spent</div>
+          <div class="val" id="cdTotalSpent" style="font-size: 18px; font-weight: 800; margin-top: 4px; color: var(--ink)">₹0.00</div>
+        </div>
+        <div style="background: var(--paper-rule); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px">
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--ink-soft)" id="cdRewardTypeLbl">Reward Earned</div>
+          <div class="val" id="cdTotalReward" style="font-size: 18px; font-weight: 800; margin-top: 4px; color: var(--brass)">0 pts</div>
+        </div>
+      </div>
+
+      <!-- Dates & Payment Info -->
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 16px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px">
+          <span style="font-size: 13px; color: var(--ink-soft)">Payment Due Date</span>
+          <span style="font-size: 14px; font-weight: 700; color: var(--ink)" id="cdDueDate">05 Aug 2026</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px">
+          <span style="font-size: 13px; color: var(--ink-soft)">Payment Status</span>
+          <span class="tag" id="cdStatusTag" style="padding: 3px 8px; border-radius: 50px; font-size: 11px; font-weight: 800; letter-spacing: 0.05em">Unpaid</span>
+        </div>
+        <div style="display:flex; gap: 8px">
+          <button class="btn sm" id="cdTogglePaidBtn" style="flex:1">Mark as Paid</button>
+        </div>
+      </div>
+
+      <!-- Transaction List -->
+      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px; letter-spacing: 0.06em">Transactions in this cycle</div>
+      <div id="cdTxList" style="display:flex; flex-direction:column; gap: 6px; max-height: 200px; overflow-y: auto;"></div>
+      <div id="cdTxEmpty" style="display:none; text-align:center; padding: 16px; color: var(--ink-soft); font-size: 13px">No transactions in this cycle.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Past Data Modal -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal-sheet" style="max-width:420px">
+    <div class="modal-head">
+      <h2>Past Records</h2>
+      <button class="btn ghost sm" id="closeHistoryModalBtn">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <p style="font-size:12px;color:var(--ink-soft);margin-bottom:14px">Browse your spending history by year and month.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+        <div class="field" style="margin:0;flex:1;min-width:90px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)">Year</label>
+          <select id="histYearSel" aria-label="Select year" style="margin-top:4px;font-weight:700"></select>
+        </div>
+        <div class="field" style="margin:0;flex:2;min-width:140px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)">Month</label>
+          <select id="histMonthSel" aria-label="Select month" style="margin-top:4px">
+            <option value="01">January</option><option value="02">February</option>
+            <option value="03">March</option><option value="04">April</option>
+            <option value="05">May</option><option value="06">June</option>
+            <option value="07">July</option><option value="08">August</option>
+            <option value="09">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+        </div>
+        <button class="btn sm" id="loadHistBtn" style="white-space:nowrap;align-self:flex-end">View →</button>
+      </div>
+      <div id="histSummary" style="display:none">
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:110px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px 16px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)">Spent</div>
+            <div class="val" id="histSpendVal" style="font-size:18px;font-weight:800;color:var(--red);margin-top:4px">₹0.00</div>
+          </div>
+          <div style="flex:1;min-width:110px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px 16px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)">Cashback</div>
+            <div class="val" id="histCashVal" style="font-size:18px;font-weight:800;color:var(--brass);margin-top:4px">₹0.00</div>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:8px" id="histPeriodLbl"></div>
+        <div id="histEntryList" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto"></div>
+        <div id="histEmpty" style="display:none;text-align:center;color:var(--ink-soft);font-size:13px;padding:18px 0">No entries for this period.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Account Profile Modal -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal-sheet" style="max-width:380px">
+    <div class="modal-head">
+      <h2>My Profile</h2>
+      <button class="btn ghost sm" id="closeAccountModalBtn">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div style="display:flex; justify-content:center; margin-bottom:18px">
+        <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg, var(--brass), #e8a820); display:flex; align-items:center; justify-content:center">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label for="acctName" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Name</label>
+        <input id="acctName" type="text" placeholder="Your name" style="margin-top:4px"/>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label for="acctEmail" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Email</label>
+        <input id="acctEmail" type="email" placeholder="you@example.com" style="margin-top:4px"/>
+      </div>
+      <div class="field" style="margin-bottom:16px">
+        <label for="acctPhone" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Phone Number</label>
+        <input id="acctPhone" type="tel" placeholder="+91 98765 43210" style="margin-top:4px"/>
+      </div>
+      <button class="btn brass-btn" id="saveAccountBtn" style="width:100%; border-radius:50px; font-weight:700">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</body>
+</html>
