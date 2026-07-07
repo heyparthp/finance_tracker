@@ -69,6 +69,7 @@ html, body {
   height: 100%;
   width: 100%;
   overflow-x: hidden;
+  max-width: 100vw;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
@@ -93,10 +94,54 @@ a:hover {
   padding: 0 16px calc(var(--tab-h) + 32px);
   width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 @media(max-width: 768px) {
   .app-wrap { padding: 0 12px calc(var(--tab-h) + 20px); }
+}
+
+@media(max-width: 480px) {
+  .app-wrap { padding: 0 10px calc(var(--tab-h) + 16px); }
+}
+
+/* ── Bento Grid ── */
+.fold-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+  margin-top: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Tablet: 2 columns, outflow spans full width */
+@media(max-width: 700px) {
+  .fold-bento-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fold-bento-grid .card:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Mobile: single column, all widgets full width */
+@media(max-width: 480px) {
+  .fold-bento-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .fold-bento-grid .card:first-child {
+    grid-column: auto;
+  }
+  .fold-bento-grid .card {
+    min-height: auto !important;
+    padding: 16px !important;
+  }
+  #hSpend, #hCash {
+    font-size: 26px !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════
