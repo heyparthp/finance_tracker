@@ -146,10 +146,12 @@ let state = {
   upiAccounts: JSON.parse(JSON.stringify(DEFAULT_UPI)),
   merchantDb: {},  // { "swiggy": { mcc: "dining", custom: false } }
   categories: JSON.parse(JSON.stringify(DEFAULT_CATS)),
-  settings: { currency: '₹', googleClientId: '', syncDays: 14, sharedSheetId: '1KyZfFKhQEVQwPfqZbrjPna4qupUSYaBwKP5p0flcars', telegramBotToken: '', telegramChatId: '' }
+  settings: { currency: '₹', googleClientId: '', syncDays: 14, sharedSheetId: '1KyZfFKhQEVQwPfqZbrjPna4qupUSYaBwKP5p0flcars', telegramBotToken: '', telegramChatId: '', supabaseUrl: '', supabaseAnonKey: '' }
 };
 
 let googleToken = null;
+let supabaseClient = null;
+let authMode = 'signin'; // 'signin' or 'signup'
 let editingCardId = null;
 let editingCatId = null;
 let editingUpiId = null;
@@ -203,12 +205,120 @@ function updateThemeUI(theme) {
 // ═══════════════════════════════════════════════
 // STORAGE
 // ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+function initSupabase() {
+  const url = state.settings.supabaseUrl;
+  const key = state.settings.supabaseAnonKey;
+  if (url && key && window.supabase) {
+    try {
+      supabaseClient = window.supabase.createClient(url, key);
+      console.log('Supabase client initialized');
+    } catch (e) {
+      console.error('Failed to initialize Supabase client:', e);
+      supabaseClient = null;
+    }
+  } else {
+    supabaseClient = null;
+  }
+}
+
+async function pushDataToSupabase() {
+  if (!supabaseClient) return;
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+    
+    const payload = {
+      entries: state.entries,
+      cards: state.cards,
+      upiAccounts: state.upiAccounts,
+      merchantDb: state.merchantDb,
+      categories: state.categories,
+      settings: state.settings
+    };
+    
+    const { error } = await supabaseClient
+      .from('user_data')
+      .upsert({
+        id: user.id,
+        data: payload,
+        updated_at: new Date().toISOString()
+      });
+      
+    if (error) {
+      console.error('Failed to push data to Supabase:', error);
+    } else {
+      console.log('Data synced to Supabase');
+    }
+  } catch (e) {
+    console.error('Error pushing data to Supabase:', e);
+  }
+}
+
+async function pullDataFromSupabase() {
+  if (!supabaseClient) return false;
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return false;
+    
+    const { data, error } = await supabaseClient
+      .from('user_data')
+      .select('data')
+      .eq('id', user.id)
+      .single();
+      
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // Record doesn't exist yet, push local state to create it!
+        await pushDataToSupabase();
+        return true;
+      }
+      console.error('Failed to pull data from Supabase:', error);
+      return false;
+    }
+    
+    if (data && data.data) {
+      const d = data.data;
+      state.entries = d.entries || [];
+      state.cards = d.cards || [];
+      state.upiAccounts = d.upiAccounts || [];
+      state.merchantDb = d.merchantDb || {};
+      
+      // Preserve current Supabase credentials in settings so they don't get lost
+      const currentUrl = state.settings.supabaseUrl;
+      const currentKey = state.settings.supabaseAnonKey;
+      state.settings = d.settings || {};
+      state.settings.supabaseUrl = currentUrl;
+      state.settings.supabaseAnonKey = currentKey;
+      
+      const custom = (d.categories || []).filter(c => !c.builtin);
+      const saved = (d.categories || []).filter(c => c.builtin);
+      state.categories = DEFAULT_CATS.map(def => {
+        const s = saved.find(x => x.id === def.id);
+        if (!s) return def;
+        return { ...def, ...s, subcats: s.subcats?.length ? s.subcats : def.subcats || [] };
+      });
+      state.categories.push(...custom.map(c => ({ subcats: [], ...c })));
+      
+      console.log('Data successfully loaded from Supabase');
+      return true;
+    }
+  } catch (e) {
+    console.error('Error pulling data from Supabase:', e);
+  }
+  return false;
+}
+
 async function persist() {
   try {
     await window.storage.set(STORE_KEY, JSON.stringify({
       entries: state.entries, cards: state.cards, upiAccounts: state.upiAccounts,
       merchantDb: state.merchantDb, categories: state.categories, settings: state.settings
     }));
+    if (supabaseClient) {
+      await pushDataToSupabase();
+    }
   } catch (e) { console.error(e); }
 }
 
@@ -233,6 +343,20 @@ async function hydrate() {
         return { ...def, ...s, subcats: s.subcats?.length ? s.subcats : def.subcats || [] };
       });
       state.categories.push(...custom.map(c => ({ subcats: [], ...c })));
+    }
+    
+    // Initial sync
+    initSupabase();
+    if (supabaseClient) {
+      const success = await pullDataFromSupabase();
+      if (success) {
+        // Re-persist locally
+        await window.storage.set(STORE_KEY, JSON.stringify({
+          entries: state.entries, cards: state.cards, upiAccounts: state.upiAccounts,
+
+          merchantDb: state.merchantDb, categories: state.categories, settings: state.settings
+        }));
+      }
     }
   } catch (e) { console.error(e); }
 }
@@ -1134,6 +1258,27 @@ function renderLedgerTable(filtered) {
 
 let activeSplitEntryId = null;
 
+function populateSplitSubcat(catId, keepVal = '') {
+  const cat = state.categories.find(c => c.id === catId);
+  const wrap = $('splitSubcategoryWrap');
+  const sel = $('splitSubcategorySelect');
+  const subcats = cat?.subcats || [];
+  
+  if (subcats.length > 0) {
+    wrap.style.display = 'block';
+    sel.innerHTML = '<option value="">— general / none —</option>';
+    subcats.forEach(s => sel.innerHTML += `<option value="${s.id}">${esc(s.name)}</option>`);
+    if (keepVal && [...sel.options].some(o => o.value === keepVal)) {
+      sel.value = keepVal;
+    } else {
+      sel.value = '';
+    }
+  } else {
+    wrap.style.display = 'none';
+    sel.innerHTML = '';
+  }
+}
+
 function openSplitModal(id) {
   const entry = state.entries.find(e => e.id === id);
   if (!entry) return;
@@ -1152,6 +1297,9 @@ function openSplitModal(id) {
     if (c.id === entry.category) opt.selected = true;
     catSel.appendChild(opt);
   });
+  
+  // Populate subcategories
+  populateSplitSubcat(entry.category, entry.subCatId);
   
   $('splitModal').classList.add('open');
 }
@@ -1191,6 +1339,7 @@ async function confirmSplit() {
   }
 
   // Create new split transaction
+  const splitSubcat = $('splitSubcategorySelect').value || null;
   const splitEntry = {
     id: uid(),
     date: original.date,
@@ -1199,7 +1348,7 @@ async function confirmSplit() {
     vendor: original.vendor,
     amount: splitAmt,
     category: splitCat,
-    subCatId: null,
+    subCatId: splitSubcat,
     mccGroup: original.mccGroup || 'other',
     mccCode: original.mccCode || null,
     paymentMode: original.paymentMode,
@@ -1947,6 +2096,7 @@ async function syncTelegram(simulate = false) {
 
 function processTelegramUpdates(updates) {
   $('tgSyncingIndicator').style.display = 'none';
+  console.log("Telegram updates received:", updates);
   
   if (updates.length > 0) {
     const highestId = Math.max(...updates.map(u => u.update_id));
@@ -1954,13 +2104,18 @@ function processTelegramUpdates(updates) {
   }
   
   let processedIds = JSON.parse(localStorage.getItem('processedTgUpdates') || '[]');
+  console.log("Already processed IDs:", processedIds);
   
   const parsed = [];
   updates.forEach(u => {
-    if (processedIds.includes(u.update_id)) return;
+    if (processedIds.includes(u.update_id)) {
+      console.log(`Update ${u.update_id} already processed.`);
+      return;
+    }
     
     const txt = u.message.text;
     const p = parseExpenseText(txt);
+    console.log(`Parsing message: "${txt}" -> Result:`, p);
     if (p.amount) {
       parsed.push({
         update_id: u.update_id,
@@ -2416,8 +2571,20 @@ function bindEvents() {
     if (saved.email) $('acctEmail').value = saved.email;
     if (saved.phone) $('acctPhone').value = saved.phone;
 
+    const updateProfileModalAuthUI = () => {
+      const isLoggedIn = localStorage.getItem('ledger_logged_in') === 'true';
+      const loginBtn = $('profileTabLoginBtn');
+      if (loginBtn) {
+        loginBtn.textContent = isLoggedIn ? 'Logout' : 'Login';
+      }
+    };
+    updateProfileModalAuthUI();
+
     $('openAccountBtn').addEventListener('click', () => {
       acctModal.classList.add('active');
+      $('profileViewSection').style.display = 'block';
+      $('profileLoginSection').style.display = 'none';
+      updateProfileModalAuthUI();
     });
     $('closeAccountModalBtn').addEventListener('click', () => {
       acctModal.classList.remove('active');
@@ -2425,6 +2592,106 @@ function bindEvents() {
     acctModal.addEventListener('click', (e) => {
       if (e.target === acctModal) acctModal.classList.remove('active');
     });
+
+    $('profileTabLoginBtn').addEventListener('click', async () => {
+      const isLoggedIn = localStorage.getItem('ledger_logged_in') === 'true';
+      if (isLoggedIn) {
+        // Perform logout
+        if (supabaseClient) {
+          try {
+            await supabaseClient.auth.signOut();
+          } catch (e) {
+            console.error('Supabase signout error:', e);
+          }
+        }
+        localStorage.setItem('ledger_logged_in', 'false');
+        localStorage.removeItem('ledger_logged_in_email');
+        updateProfileModalAuthUI();
+        $('profileViewSection').style.display = 'block';
+        $('profileLoginSection').style.display = 'none';
+        toast('Logged out successfully');
+      } else {
+        // Toggle view to login section
+        authMode = 'signin';
+        $('toggleAuthModeBtn').textContent = "Don't have an account? Sign Up";
+        $('loginSubmitBtn').textContent = 'Sign In';
+        $('profileViewSection').style.display = 'none';
+        $('profileLoginSection').style.display = 'block';
+        $('loginEmail').focus();
+      }
+    });
+
+    $('toggleAuthModeBtn').addEventListener('click', () => {
+      if (authMode === 'signin') {
+        authMode = 'signup';
+        $('toggleAuthModeBtn').textContent = 'Already have an account? Sign In';
+        $('loginSubmitBtn').textContent = 'Sign Up';
+      } else {
+        authMode = 'signin';
+        $('toggleAuthModeBtn').textContent = "Don't have an account? Sign Up";
+        $('loginSubmitBtn').textContent = 'Sign In';
+      }
+    });
+
+    $('backToProfileBtn').addEventListener('click', () => {
+      $('profileLoginSection').style.display = 'none';
+      $('profileViewSection').style.display = 'block';
+    });
+
+    $('loginSubmitBtn').addEventListener('click', async () => {
+      const email = $('loginEmail').value.trim();
+      const password = $('loginPassword').value.trim();
+      if (!email) {
+        toast('Please enter your email');
+        return;
+      }
+      if (!password) {
+        toast('Please enter your password');
+        return;
+      }
+      
+      // Supabase Authenticator
+      if (supabaseClient) {
+        toast(authMode === 'signin' ? 'Signing in...' : 'Creating account...');
+        try {
+          if (authMode === 'signin') {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) { toast(error.message); return; }
+          } else {
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) { toast(error.message); return; }
+            toast('Registration successful! Verification email sent if configured.');
+          }
+          
+          // Pull synced data
+          const success = await pullDataFromSupabase();
+          if (success) {
+            renderAll();
+            toast('Data synced successfully!');
+          }
+        } catch (e) {
+          console.error('Authentication exception:', e);
+          toast(e.message || 'Auth error');
+          return;
+        }
+      }
+
+      // Complete Sign In locally
+      localStorage.setItem('ledger_logged_in', 'true');
+      localStorage.setItem('ledger_logged_in_email', email);
+      $('acctEmail').value = email;
+      
+      // Auto-save login email to profile
+      const currentProfile = JSON.parse(localStorage.getItem('ledger_profile') || '{}');
+      currentProfile.email = email;
+      localStorage.setItem('ledger_profile', JSON.stringify(currentProfile));
+
+      updateProfileModalAuthUI();
+      $('profileLoginSection').style.display = 'none';
+      $('profileViewSection').style.display = 'block';
+      toast('Signed in successfully');
+    });
+
     $('saveAccountBtn').addEventListener('click', () => {
       const profile = {
         name: $('acctName').value.trim(),
@@ -2492,11 +2759,35 @@ function bindEvents() {
     }
   }
 
-  // Nexora add transaction scroll
-  $('nexoraAddBtn').addEventListener('click', () => {
-    $('fAmt').focus();
-    $('fAmt').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  // Modals for Transaction & Paste & Go
+  const addTxModal = $('addTxModal');
+  const pasteGoModal = $('pasteGoModal');
+
+  if (addTxModal) {
+    $('nexoraAddBtn').addEventListener('click', () => {
+      addTxModal.classList.add('active');
+      $('fAmt').focus();
+    });
+    $('closeAddTxModalBtn').addEventListener('click', () => {
+      addTxModal.classList.remove('active');
+    });
+    addTxModal.addEventListener('click', (e) => {
+      if (e.target === addTxModal) addTxModal.classList.remove('active');
+    });
+  }
+
+  if (pasteGoModal) {
+    $('nexoraPasteBtn').addEventListener('click', () => {
+      pasteGoModal.classList.add('active');
+      $('pasteText').focus();
+    });
+    $('closePasteGoModalBtn').addEventListener('click', () => {
+      pasteGoModal.classList.remove('active');
+    });
+    pasteGoModal.addEventListener('click', (e) => {
+      if (e.target === pasteGoModal) pasteGoModal.classList.remove('active');
+    });
+  }
 
   // Quick pay contacts listeners
   document.querySelectorAll('.quick-contact-btn').forEach(btn => {
@@ -2507,8 +2798,9 @@ function bindEvents() {
       $('fMode').value = 'upi';
       buildInstrumentField();
       
+      // Auto-open add transaction modal
+      if ($('addTxModal')) $('addTxModal').classList.add('active');
       $('fAmt').focus();
-      $('fAmt').scrollIntoView({ behavior: 'smooth', block: 'center' });
       toast(`Selected payee: ${payee} (${upi})`);
     });
   });
@@ -2529,15 +2821,24 @@ function bindEvents() {
   // Past data viewer
   $('loadHistBtn').addEventListener('click', loadHistData);
 
-  // Manual / Paste segment control
+  // Sync / Telegram segment control
   document.querySelectorAll('#entryModeSeg button').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('#entryModeSeg button').forEach(x => x.classList.toggle('on', x === b));
-    const mode = b.dataset.mode;
-    $('pasteBox').style.display = mode === 'paste' ? 'block' : 'none';
-    $('syncBox').style.display = mode === 'sync' ? 'block' : 'none';
-    $('telegramBox').style.display = mode === 'telegram' ? 'block' : 'none';
-    if (mode === 'sync') {
-      updateInlineGmailStatus();
+    const isAlreadyOn = b.classList.contains('on');
+    
+    // Reset segment buttons and hide segment panels
+    document.querySelectorAll('#entryModeSeg button').forEach(x => x.classList.remove('on'));
+    $('syncBox').style.display = 'none';
+    $('telegramBox').style.display = 'none';
+    
+    if (!isAlreadyOn) {
+      b.classList.add('on');
+      const mode = b.dataset.mode;
+      if (mode === 'sync') {
+        $('syncBox').style.display = 'block';
+        updateInlineGmailStatus();
+      } else if (mode === 'telegram') {
+        $('telegramBox').style.display = 'block';
+      }
     }
   }));
 
@@ -2585,6 +2886,10 @@ function bindEvents() {
     
     $('detBadge').style.display = 'inline';
     $('parseHint').textContent = p.amount ? 'Detected — review and save.' : 'No amount found — fill in manually.';
+    
+    // Close Paste Modal and open Add Transaction Modal
+    if ($('pasteGoModal')) $('pasteGoModal').classList.remove('active');
+    if ($('addTxModal')) $('addTxModal').classList.add('active');
   });
 
   // Save new entry
@@ -2634,9 +2939,10 @@ function bindEvents() {
     $('merchantAssign').style.display = 'none';
     currentMccGroup = null; currentVendorKey = '';
     $('mccChipWrap').style.display = 'none'; $('mccOverride').style.display = 'none';
-    document.querySelectorAll('#entryModeSeg button').forEach((b, i) => b.classList.toggle('on', i === 0));
-    $('pasteBox').style.display = 'none';
+    if ($('addTxModal')) $('addTxModal').classList.remove('active');
     $('syncBox').style.display = 'none';
+    $('telegramBox').style.display = 'none';
+    document.querySelectorAll('#entryModeSeg button').forEach(b => b.classList.remove('on'));
     buildInstrumentField();
     renderAll(); toast('Entry saved');
   });
@@ -2870,6 +3176,28 @@ function bindEvents() {
     await persist();
   });
   
+  $('saveSupabaseSettingsBtn').addEventListener('click', async () => {
+    const url = $('sbUrl').value.trim();
+    const key = $('sbAnonKey').value.trim();
+    
+    state.settings.supabaseUrl = url;
+    state.settings.supabaseAnonKey = key;
+    await persist();
+    
+    initSupabase();
+    
+    if (supabaseClient) {
+      toast('Supabase client initialized ✓');
+      const success = await pullDataFromSupabase();
+      if (success) {
+        renderAll();
+        toast('Database sync complete ✓');
+      }
+    } else {
+      toast('Supabase credentials cleared');
+    }
+  });
+
   $('applyManualTokenBtn').addEventListener('click', () => {
     const token = $('manualTokenInput').value.trim();
     if (!token) { toast('Paste an Access Token first'); return; }
@@ -2899,6 +3227,9 @@ function bindEvents() {
   // Split Modal Dialog
   $('closeSplitModalBtn').addEventListener('click', closeSplitModal);
   $('confirmSplitBtn').addEventListener('click', confirmSplit);
+  $('splitCategorySelect').addEventListener('change', () => {
+    populateSplitSubcat($('splitCategorySelect').value);
+  });
 
   // Clear data
   $('clearAllDataBtn').addEventListener('click', clearAllData);
@@ -3332,6 +3663,8 @@ async function init() {
     if (state.settings.sharedSheetId && $('sharedSheetId')) $('sharedSheetId').value = state.settings.sharedSheetId;
     if (state.settings.telegramBotToken && $('tgBotToken')) $('tgBotToken').value = state.settings.telegramBotToken;
     if (state.settings.telegramChatId && $('tgChatId')) $('tgChatId').value = state.settings.telegramChatId;
+    if (state.settings.supabaseUrl && $('sbUrl')) $('sbUrl').value = state.settings.supabaseUrl;
+    if (state.settings.supabaseAnonKey && $('sbAnonKey')) $('sbAnonKey').value = state.settings.supabaseAnonKey;
     
     populateStaticSelects();
     populateFSubcat($('fCat').value);

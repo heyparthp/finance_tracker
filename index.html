@@ -3,7 +3,30 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>The Ledger</title>
+  <title>Ledge.money</title>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      var errDiv = document.getElementById('debug-err-banner');
+      if (!errDiv) {
+        errDiv = document.createElement('div');
+        errDiv.id = 'debug-err-banner';
+        errDiv.style.position = 'fixed';
+        errDiv.style.top = '0';
+        errDiv.style.left = '0';
+        errDiv.style.width = '100%';
+        errDiv.style.background = '#f43f5e';
+        errDiv.style.color = '#fff';
+        errDiv.style.padding = '12px';
+        errDiv.style.fontSize = '12px';
+        errDiv.style.fontFamily = 'monospace';
+        errDiv.style.zIndex = '999999';
+        errDiv.style.boxSizing = 'border-box';
+        document.body.appendChild(errDiv);
+      }
+      errDiv.innerHTML = '🔴 <b>JS Error:</b> ' + msg + ' at ' + url + ':' + line + ':' + col;
+      return false;
+    };
+  </script>
   
   <!-- Preconnect and Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,31 +38,51 @@
   
   <!-- PDF.js library for in-browser PDF text parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- JavaScript Code (Defer Load) -->
   <script defer src="app.js"></script>
+  <style>
+    /* Purple accent overrides */
+    #nexoraAddBtn { background: #7c3aed !important; color: #fff !important; border-color: #7c3aed !important; }
+    #nexoraAddBtn:hover { background: #6d28d9 !important; border-color: #6d28d9 !important; }
+    .sec-head h2 { border-left: 3px solid var(--purple); padding-left: 10px; }
+  </style>
 </head>
 <body>
-<div class="app-wrap">
+<!-- Ambient background light glows -->
+<div class="ambient-glow-1"></div>
+<div class="ambient-glow-2"></div>
+
+<div class="app-wrap" style="position:relative; z-index:1">
   <header class="page-head">
-    <div class="brand-row">
-      <div class="brand">
-        <h1>The Ledger</h1>
-        <div class="brand-meta">
-          <p>track what goes out</p>
+    <div class="brand-row" style="display:flex; justify-content:between; align-items:center; width:100%">
+      <div class="brand flex-align-center" style="display:flex; align-items:center; gap:12px">
+
+        <div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <h1 style="font-family: 'Outfit', sans-serif; font-size:20px; font-weight:700; margin:0; letter-spacing:-0.5px">Ledge<span style="font-size:12px; font-weight:400; color:var(--ink-soft); margin-left:1px">.money</span></h1>
+          </div>
+          <div class="brand-meta" style="margin-top:2px">
+            <p style="font-size:11px; color:var(--ink-soft); margin:0">track what goes out</p>
+          </div>
         </div>
       </div>
       
       <!-- Header action icons -->
-      <div class="top-accounts-widget" style="padding: 6px 10px; gap: 6px">
-        <button id="openAccountBtn" title="Account" style="display:flex; align-items:center; justify-content:center; padding:4px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        </button>
-        <button id="openHistoryBtn" title="Past Records" style="display:flex; align-items:center; justify-content:center; padding:4px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-        </button>
-        <button class="top-settings-btn" id="topSettingsBtn" title="Go to Settings" style="display:flex; align-items:center; justify-content:center; padding:4px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        </button>
+      <div style="display:flex; align-items:center; gap:12px; margin-left:auto">
+
+        <div class="top-accounts-widget" style="padding: 4px; gap: 4px; background:rgba(0,0,0,0.15); border:1px solid var(--line); border-radius:8px; display:flex">
+          <button id="openAccountBtn" title="Account" style="display:flex; align-items:center; justify-content:center; padding:6px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none; transition:color 0.2s">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </button>
+          <button id="openHistoryBtn" title="Past Records" style="display:flex; align-items:center; justify-content:center; padding:6px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none; transition:color 0.2s">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </button>
+          <button class="top-settings-btn" id="topSettingsBtn" title="Go to Settings" style="display:flex; align-items:center; justify-content:center; padding:6px; background:none; border:none; color:var(--ink-soft); cursor:pointer; outline:none; transition:color 0.2s">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -47,45 +90,61 @@
   <!-- ═══ LEDGER TAB ═══ -->
   <main class="tab-panel active" id="tab-ledger">
 
-    <!-- Nexora Header Layout -->
-    <div class="nexora-header" style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:20px; margin-top:10px">
-      <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); display:flex; align-items:center; gap:8px">
-        <button id="monthPrevBtn" title="Previous month" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--ink-soft);font-weight:bold;line-height:1">‹</button>
-        <span id="hSpendLbl">Spent July</span>
-        <button id="monthNextBtn" title="Next month" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--ink-soft);font-weight:bold;line-height:1">›</button>
-      </div>
-      <div id="hSpend" style="font-size:36px; font-weight:800; color:var(--ink); margin:6px 0 16px 0; font-family:var(--serif)">₹0.00</div>
-      
-      <!-- Nexora CTA Row -->
-      <div style="display:flex; gap:12px; width:100%; justify-content:center; margin-bottom:20px">
-        <button id="nexoraAddBtn" class="btn-nexora-lime" style="display:flex; align-items:center; gap:8px; background:var(--lime); color:#0B0E11; border:none; padding:12px 24px; border-radius:50px; font-size:13px; font-weight:800; cursor:pointer; transition:transform 0.15s, opacity 0.15s; outline:none">
-          <span style="font-size:16px; font-weight:900; line-height:1">+</span> Add Transaction
-        </button>
-        <button id="manageInstrBtn" class="btn-nexora-purple" onclick="switchTab('cards')" style="display:flex; align-items:center; gap:8px; background:var(--brass); color:#FFF; border:none; padding:12px 24px; border-radius:50px; font-size:13px; font-weight:800; cursor:pointer; transition:transform 0.15s, opacity 0.15s; outline:none">
-          💳 Instruments
-        </button>
-      </div>
-      
-      <!-- Nexora Summary Tiles (Income & Expense style) -->
-      <div class="nexora-stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%">
-        <!-- Spent Card -->
-        <div class="nexora-stat-card" style="background:var(--card); border:1.5px solid var(--line); border-radius:20px; padding:14px 16px; text-align:left; position:relative; overflow:hidden">
-          <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-soft); letter-spacing:0.04em">Month Spends</div>
-          <div id="hSpendSubVal" style="font-size:20px; font-weight:800; margin-top:6px; color:var(--ink)">₹0.00</div>
-          <div style="font-size:10px; font-weight:700; color:var(--green); margin-top:4px; display:flex; align-items:center; gap:2px">
-            <span>↑</span> 100% active
-          </div>
-        </div>
-        
-        <!-- Cashback Card (Toggles with Points) -->
-        <div class="nexora-stat-card" id="cashbackPill" style="background:var(--card); border:1.5px solid var(--line); border-radius:20px; padding:14px 16px; text-align:left; position:relative; overflow:hidden; cursor:pointer">
+    <!-- Fold Money Bento Grid -->
+    <div class="fold-bento-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:16px; margin-bottom:20px; margin-top:10px">
+      <!-- Bento Widget 1: Main Balance/Outflow -->
+      <div class="card" style="margin-top:0; padding:20px; display:flex; flex-direction:column; justify-content:space-between; min-height:130px">
+        <div>
           <div style="display:flex; justify-content:space-between; align-items:center">
-            <div id="hCashLbl" style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-soft); letter-spacing:0.04em">Cashback</div>
-            <button id="rewardToggleBtn" title="Toggle Cashback / Points" style="background:var(--line); border:none; cursor:pointer; font-size:9px; font-weight:800; color:var(--ink-soft); padding:2px 7px; border-radius:50px; line-height:1.6; letter-spacing:.04em; transition:background 0.18s">PTS</button>
+            <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft)">Month Outflow</span>
+            <div style="display:flex; align-items:center; gap:4px">
+              <button id="monthPrevBtn" title="Previous month" style="background:none; border:none; cursor:pointer; color:var(--ink-soft); padding:2px">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:block"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <span id="hSpendLbl" style="font-size:10.5px; font-weight:700; color:var(--ink-mid)">July</span>
+              <button id="monthNextBtn" title="Next month" style="background:none; border:none; cursor:pointer; color:var(--ink-soft); padding:2px">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:block"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
           </div>
-          <div id="hCash" style="font-size:20px; font-weight:800; margin-top:6px; color:var(--brass)">₹0.00</div>
-          <div style="font-size:10px; font-weight:700; color:var(--green); margin-top:4px; display:flex; align-items:center; gap:2px">
-            <span id="hCashTrend">↑</span> active rewards
+          <div id="hSpend" style="font-size:30px; font-weight:800; color:var(--ink); margin:12px 0 4px 0; font-family:var(--mono); letter-spacing:-1px">₹0.00</div>
+          <span id="hSpendSubVal" style="display:none">₹0.00</span>
+        </div>
+        <div style="font-size:10.5px; color:var(--red); font-weight:600; display:flex; align-items:center; gap:4px">
+          <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--red)"></span>
+          Active Outflow
+        </div>
+      </div>
+
+      <!-- Bento Widget 2: Rewards & Cashbacks -->
+      <div class="card" id="cashbackPill" style="margin-top:0; padding:20px; display:flex; flex-direction:column; justify-content:space-between; min-height:130px; cursor:pointer">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span id="hCashLbl" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft)">Cashback Yield</span>
+            <button id="rewardToggleBtn" title="Toggle Cashback / Points" style="background:var(--paper-rule); border:1px solid var(--line); cursor:pointer; font-size:9px; font-weight:700; color:var(--ink-mid); padding:2px 8px; border-radius:4px; transition:all 0.15s">PTS</button>
+          </div>
+          <div id="hCash" style="font-size:30px; font-weight:800; color:var(--green); margin:12px 0 4px 0; font-family:var(--mono); letter-spacing:-1px">₹0.00</div>
+          <span id="hCashTrend" style="display:none">↑</span>
+        </div>
+        <div style="font-size:10.5px; color:var(--green); font-weight:600; display:flex; align-items:center; gap:4px">
+          <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green)"></span>
+          Accumulated Rewards
+        </div>
+      </div>
+
+      <!-- Bento Widget 3: Quick Actions -->
+      <div class="card" style="margin-top:0; padding:20px; display:flex; flex-direction:column; justify-content:space-between; min-height:130px">
+        <div>
+          <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft)">Quick Actions</span>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px">
+            <button id="nexoraAddBtn" class="btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; font-size:12px; font-weight:700; padding:8px 12px; border-radius:6px; background:var(--ink); color:var(--paper); border:none; cursor:pointer">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:block"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Add Transaction
+            </button>
+            <button id="nexoraPasteBtn" class="btn ghost" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; font-size:12px; font-weight:700; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+              Paste &amp; Go
+            </button>
           </div>
         </div>
       </div>
@@ -94,22 +153,8 @@
     <div class="card">
       <div style="margin-bottom:12px">
         <div class="seg" id="entryModeSeg">
-          <button class="on" data-mode="manual">Add entry</button>
-          <button data-mode="paste">Paste &amp; go</button>
           <button data-mode="sync">Sync Gmail</button>
           <button data-mode="telegram">🤖 Sync Telegram</button>
-        </div>
-      </div>
-
-      <!-- paste box -->
-      <div id="pasteBox" style="display:none;margin-bottom:12px">
-        <div class="field">
-          <label for="pasteText">Paste bank SMS or email alert</label>
-          <textarea id="pasteText" placeholder="e.g. Rs.450.00 debited from a/c **1234 at SWIGGY via UPI on 01-Jul-26"></textarea>
-        </div>
-        <div class="btn-row">
-          <span class="info-msg" id="parseHint">I'll extract amount, merchant, mode, card — then you confirm.</span>
-          <button class="btn ghost sm" id="detectBtn">Detect</button>
         </div>
       </div>
 
@@ -137,95 +182,6 @@
         <div id="tgAlertsList" style="margin-top:16px;display:none;gap:10px;flex-direction:column">
           <div style="font-size:11px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em">Pending Telegram Transactions</div>
           <div id="tgAlertsContainer" style="display:flex;flex-direction:column;gap:8px"></div>
-        </div>
-      </div>
-
-      <!-- main fields -->
-      <div class="g4" style="gap:12px">
-        <div class="field">
-          <label for="fAmt">Amount</label>
-          <input id="fAmt" type="number" step="0.01" placeholder="0.00"/>
-        </div>
-        <div class="field">
-          <label for="fVendor">Vendor / note <span id="detBadge" class="badge brass" style="display:none">detected</span></label>
-          <input id="fVendor" type="text" placeholder="e.g. Swiggy"/>
-        </div>
-        <div class="field">
-          <label for="fCat">Category</label>
-          <select id="fCat"></select>
-        </div>
-        <div class="field">
-          <label for="fDate">Date</label>
-          <input id="fDate" type="date"/>
-        </div>
-      </div>
-
-      <!-- subcategory -->
-      <div class="fsubcat-wrap" id="fSubcatWrap">
-        <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
-          <div class="field" style="flex:1;min-width:160px">
-            <label for="fSubcat">Subcategory <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-faint)">— optional</span></label>
-            <select id="fSubcat">
-              <option value="">— general / none —</option>
-            </select>
-          </div>
-          <div id="fSubcatAddWrap" style="display:none;flex:1;min-width:180px">
-            <div class="field">
-              <label for="fSubcatNewName">New subcategory name</label>
-              <div style="display:flex;gap:8px">
-                <input id="fSubcatNewName" type="text" placeholder="e.g. Snacks" style="flex:1"/>
-                <button class="btn sm" id="saveSubcatBtn">Add</button>
-                <button class="btn ghost sm" id="cancelSubcatBtn">✕</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- mcc chip -->
-      <div id="mccChipWrap" style="display:none">
-        <div class="mcc-chip" id="mccChipInner">
-          <span id="mccChipIco"></span><span id="mccChipLbl"></span><span class="x">▾ change</span>
-        </div>
-      </div>
-      <div id="mccOverride" style="display:none;margin-top:8px">
-        <select id="mccSelect" style="max-width:280px" aria-label="Select MCC group override"></select>
-      </div>
-
-      <!-- merchant assign prompt (for unknown merchants) -->
-      <div class="merchant-assign" id="merchantAssign">
-        <div class="ma-head">📍 Unknown merchant — assign an MCC so we remember it</div>
-        <div class="ma-row" style="flex-wrap:wrap;gap:8px">
-          <select id="maMccSelect" style="flex:1;min-width:140px" aria-label="Assign merchant MCC"></select>
-          <input type="text" id="maMccCode" maxlength="4" placeholder="MCC code (opt.)" title="Optional 4-digit MCC code" style="width:120px;font-family:var(--mono);font-size:13px;padding:8px 9px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper)"/>
-          <button class="btn sm ma-save" id="maSaveBtn">Save</button>
-          <button class="btn ghost sm" id="maDismissBtn">Skip</button>
-        </div>
-      </div>
-
-      <!-- payment mode + instrument -->
-      <div class="g2" style="margin-top:12px;gap:12px">
-        <div class="field">
-          <label for="fMode">Payment mode</label>
-          <select id="fMode">
-            <option value="upi">UPI</option>
-            <option value="credit">Credit Card</option>
-            <option value="debit">Debit Card</option>
-            <option value="cash">Cash</option>
-            <option value="netbanking">Net Banking</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div id="instrWrap"></div><!-- dynamically filled -->
-      </div>
-
-      <div class="cb-pre" id="cbPre"></div>
-
-      <div class="btn-row" style="margin-top:12px">
-        <span class="err-msg" id="entryErr"></span>
-        <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
-          <button class="link-btn" id="manageInstrLink">Manage instruments</button>
-          <button class="btn" id="saveEntryBtn">Save entry</button>
         </div>
       </div>
     </div>
@@ -680,22 +636,70 @@
             </div>
 
             <div style="margin-top:12px; background:rgba(220,165,50,0.04); border:1px solid rgba(220,165,50,0.15); padding:12px; border-radius:8px">
-              <h4 style="font-size:12.5px; font-weight:800; color:var(--brass); margin-bottom:8px">📋 Detailed Setup Instructions:</h4>
+              <h4 style="font-size:12.5px; font-weight:800; color:var(--brass); margin-bottom:10px">📋 Sync Setup Instructions:</h4>
+              
+              <div class="seg" id="tgSetupOsSeg" style="margin-bottom:12px; justify-content:center; display:flex; gap:4px">
+                <button type="button" class="on" data-os="ios" style="padding:4px 12px; font-size:11px; flex:1; border-radius:12px">📱 iOS Shortcut</button>
+                <button type="button" data-os="android" style="padding:4px 12px; font-size:11px; flex:1; border-radius:12px">🤖 Android App</button>
+              </div>
 
-              <div style="font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.02em">1. Bot & Chat Setup</div>
-              <ol class="setup-steps" style="font-size:11.5px; margin-top:2px; padding-left:16px; color:var(--ink-mid); line-height:1.5; margin-bottom:10px">
-                <li>Open Telegram, search for <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" style="font-weight:700">@BotFather</a> and send <code>/newbot</code> to create a bot. Copy the generated API Token.</li>
-                <li>Search for <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" style="font-weight:700">@userinfobot</a> and start it to get your numeric Chat ID (e.g. 987654321).</li>
-                <li><strong>Important:</strong> Start a chat with your newly created bot (click Start) so it is authorized to send you alerts.</li>
+              <!-- General Bot Setup -->
+              <div style="font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.02em">Step 1: Create Telegram Bot</div>
+              <ol class="setup-steps" style="font-size:11px; margin-top:2px; padding-left:16px; color:var(--ink-mid); line-height:1.5; margin-bottom:10px">
+                <li>Search for <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" style="font-weight:700">@BotFather</a> on Telegram. Send <code>/newbot</code>, follow prompts, and copy the <strong>HTTP API Token</strong>.</li>
+                <li>Search for <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" style="font-weight:700">@userinfobot</a> and tap Start to get your numeric <strong>Chat ID</strong>.</li>
+                <li><strong>CRITICAL:</strong> Send a message (e.g. <code>/start</code>) to your newly created bot to authorize it.</li>
               </ol>
 
-              <div style="font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.02em">2. iOS Apple Shortcut Setup</div>
-              <ol class="setup-steps" style="font-size:11.5px; margin-top:2px; padding-left:16px; color:var(--ink-mid); line-height:1.5">
-                <li>Open the native iOS <strong>Shortcuts</strong> app and switch to the <strong>Automation</strong> tab.</li>
-                <li>Tap <strong>+</strong> and choose <strong>Message</strong> as the trigger. Set: Sender to <em>Anyone</em>, Message Contains to common keywords (e.g., <code>debited</code>, <code>spent</code>, <code>transaction</code>), and select <strong>Run Immediately</strong>.</li>
-                <li>Tap <strong>New Blank Automation</strong> and add the action: <strong>Get Contents of URL</strong>.</li>
-                <li>Set the URL input to: <code>https://api.telegram.org/bot&lt;API_TOKEN&gt;/sendMessage?chat_id=&lt;CHAT_ID&gt;&amp;text=&lt;Shortcut Input&gt;</code> (replace API_TOKEN and CHAT_ID with your values, and set the text parameter to <em>Shortcut Input</em> -> <em>Message</em> -> <em>Body</em>).</li>
-              </ol>
+              <!-- iOS Setup Content -->
+              <div id="tgSetupIos" style="display:block">
+                <div style="font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.02em">Step 2: iOS Shortcuts Automation</div>
+                <ol class="setup-steps" style="font-size:11px; margin-top:2px; padding-left:16px; color:var(--ink-mid); line-height:1.5">
+                  <li>Open iOS <strong>Shortcuts</strong> app → <strong>Automation</strong> tab → Tap <strong>+</strong> (or New Automation).</li>
+                  <li>Select <strong>"Message"</strong> as the trigger:
+                    <ul style="padding-left:14px; margin-top:3px; list-style-type:circle">
+                      <li>Set Message Contains to: <code>spent</code>, <code>debited</code>, <code>spent on Card</code>, <code>Rs.</code></li>
+                      <li>Select <strong>Run Immediately</strong> (turn off "Ask Before Running").</li>
+                      <li>Tap Next.</li>
+                    </ul>
+                  </li>
+                  <li>Tap <strong>New Blank Automation</strong> → add action: <strong>URL</strong>. Paste: <code>https://api.telegram.org/bot&lt;YOUR_BOT_TOKEN&gt;/sendMessage</code></li>
+                  <li>Add action: <strong>Get Contents of URL</strong> (connect it to the URL action).</li>
+                  <li>Expand the <strong>Get Contents of URL</strong> action:
+                    <ul style="padding-left:14px; margin-top:4px; list-style-type:circle">
+                      <li>Change Method to <strong>POST</strong>.</li>
+                      <li>Headers: add <code>Content-Type</code>: <code>application/json</code>.</li>
+                      <li>Request Body: select <strong>JSON</strong>.</li>
+                      <li>Add field <code>chat_id</code> (Type: Text) and paste your numeric Chat ID.</li>
+                      <li>Add field <code>text</code> (Type: Text) and select <strong>Shortcut Input → Message Body</strong>.</li>
+                    </ul>
+                  </li>
+                  <li>Save and test it! SMS alerts will now instantly forward to your Telegram bot and sync.</li>
+                </ol>
+              </div>
+
+              <!-- Android Setup Content -->
+              <div id="tgSetupAndroid" style="display:none">
+                <div style="font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.02em">Step 2: Android Auto-Forwarding App</div>
+                <ol class="setup-steps" style="font-size:11px; margin-top:2px; padding-left:16px; color:var(--ink-mid); line-height:1.5">
+                  <li>Install a free SMS forwarding app from Google Play Store (e.g. <strong>"SMS to Telegram"</strong> by LanRen or <strong>"SMS Forwarder"</strong>).</li>
+                  <li>Open the app and configure the destination:
+                    <ul style="padding-left:14px; margin-top:4px; list-style-type:circle">
+                      <li>Select Telegram Bot as destination.</li>
+                      <li>Paste your <strong>Bot Token</strong> and <strong>Chat ID</strong> from Step 1.</li>
+                    </ul>
+                  </li>
+                  <li>Set up filters:
+                    <ul style="padding-left:14px; margin-top:4px; list-style-type:circle">
+                      <li>Add text rule: Only forward messages containing words like <code>debited</code>, <code>spent</code>, <code>Rs.</code>, <code>INR</code>, <code>₹</code>.</li>
+                      <li>Optional: Add sender rules for your specific bank's sender ID.</li>
+                    </ul>
+                  </li>
+                  <li>Enable background service and grant SMS read permissions.</li>
+                  <li>Test it! Any incoming matching SMS will auto-forward to your bot.</li>
+                </ol>
+              </div>
+
             </div>
           </div>
 
@@ -735,6 +739,21 @@
             <button class="btn sm" id="saveCurrencyBtn">Save</button>
           </div>
         </div>
+      </div>
+
+      <!-- ── Supabase Cloud Sync ── -->
+      <div class="setting-row" style="border-top:1px dashed var(--line); margin-top:16px; padding-top:16px">
+        <h3>☁️ Supabase Cloud Sync</h3>
+        <p style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Link to a free Supabase project to sync your data across web and mobile.</p>
+        <div class="field" style="margin-bottom:10px">
+          <label for="sbUrl">Supabase API URL</label>
+          <input id="sbUrl" type="text" placeholder="https://xxxxxx.supabase.co" style="width:100%"/>
+        </div>
+        <div class="field" style="margin-bottom:10px">
+          <label for="sbAnonKey">Supabase Anon Key</label>
+          <input id="sbAnonKey" type="password" placeholder="eyJh......" style="width:100%"/>
+        </div>
+        <button class="btn sm" id="saveSupabaseSettingsBtn" style="border-radius:50px; font-weight:700">Save Credentials</button>
       </div>
 
     </div>
@@ -805,6 +824,11 @@
       <div class="field">
         <label for="splitCategorySelect">Split Category</label>
         <select id="splitCategorySelect" style="width: 100%"></select>
+      </div>
+      
+      <div class="field" id="splitSubcategoryWrap" style="display: none;">
+        <label for="splitSubcategorySelect">Split Subcategory</label>
+        <select id="splitSubcategorySelect" style="width: 100%"></select>
       </div>
       
       <div class="btn-row" style="margin-top:8px">
@@ -920,33 +944,200 @@
 <!-- Account Profile Modal -->
 <div class="modal-overlay" id="accountModal">
   <div class="modal-sheet" style="max-width:380px">
-    <div class="modal-head">
-      <h2>My Profile</h2>
-      <button class="btn ghost sm" id="closeAccountModalBtn">✕</button>
+    <div class="modal-head" style="display:flex; justify-content:space-between; align-items:center">
+      <h2 style="font-family:var(--sans); font-size:16px; font-weight:700">My Profile</h2>
+      <div style="display:flex; align-items:center; gap:10px">
+        <button class="link-btn" id="profileTabLoginBtn" style="font-size:11px; color:var(--brass); background:none; border:none; cursor:pointer; font-weight:700">Login</button>
+        <button class="btn ghost sm" id="closeAccountModalBtn" style="padding:4px 8px">✕</button>
+      </div>
     </div>
     <div class="modal-body" style="padding:20px">
-      <div style="display:flex; justify-content:center; margin-bottom:18px">
-        <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg, var(--brass), #e8a820); display:flex; align-items:center; justify-content:center">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <!-- Profile Information View Section -->
+      <div id="profileViewSection">
+        <div style="display:flex; justify-content:center; margin-bottom:18px">
+          <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg, var(--brass), #e8a820); display:flex; align-items:center; justify-content:center">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label for="acctName" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Name</label>
+          <input id="acctName" type="text" placeholder="Your name" style="margin-top:4px; width:100%"/>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label for="acctEmail" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Email</label>
+          <input id="acctEmail" type="email" placeholder="you@example.com" style="margin-top:4px; width:100%"/>
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label for="acctPhone" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Phone Number</label>
+          <input id="acctPhone" type="tel" placeholder="+91 98765 43210" style="margin-top:4px; width:100%"/>
+        </div>
+        <button class="btn brass-btn" id="saveAccountBtn" style="width:100%; border-radius:50px; font-weight:700">Save Profile</button>
+      </div>
+
+      <!-- Login Section -->
+      <div id="profileLoginSection" style="display:none">
+        <div style="display:flex; justify-content:center; margin-bottom:18px">
+          <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg, var(--brass), var(--green)); display:flex; align-items:center; justify-content:center">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label for="loginEmail" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Email Address</label>
+          <input id="loginEmail" type="email" placeholder="you@example.com" style="margin-top:4px; width:100%"/>
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label for="loginPassword" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Password</label>
+          <input id="loginPassword" type="password" placeholder="••••••••" style="margin-top:4px; width:100%"/>
+        </div>
+        <button class="btn brass-btn" id="loginSubmitBtn" style="width:100%; border-radius:50px; font-weight:700; background:var(--brass); color:#fff">Sign In</button>
+        <div style="text-align:center; margin-top:14px; display:flex; flex-direction:column; gap:8px">
+          <button class="link-btn" id="toggleAuthModeBtn" style="font-size:11px; color:var(--brass); background:none; border:none; cursor:pointer; font-weight:700">Don't have an account? Sign Up</button>
+          <button class="link-btn" id="backToProfileBtn" style="font-size:11px; color:var(--ink-soft); background:none; border:none; cursor:pointer">Back to Profile</button>
         </div>
       </div>
-      <div class="field" style="margin-bottom:12px">
-        <label for="acctName" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Name</label>
-        <input id="acctName" type="text" placeholder="Your name" style="margin-top:4px"/>
+    </div>
+  </div>
+</div>
+
+<!-- Paste & Go Modal -->
+<div class="modal-overlay" id="pasteGoModal">
+  <div class="modal-sheet" style="max-width:420px; border-top: 2px solid var(--lime)">
+    <div class="modal-head">
+      <h2 style="font-family:var(--sans); font-size:16px; font-weight:700">Paste &amp; Go</h2>
+      <button class="btn ghost sm" id="closePasteGoModalBtn">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div id="pasteBox">
+        <div class="field">
+          <label for="pasteText" style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--ink-soft); letter-spacing:0.04em">Paste bank SMS or email alert</label>
+          <textarea id="pasteText" placeholder="e.g. Rs.450.00 debited from a/c **1234 at SWIGGY via UPI on 01-Jul-26" style="margin-top:6px; height:80px; width:100%"></textarea>
+        </div>
+        <div class="btn-row" style="margin-top:12px; display:flex; justify-content:space-between; align-items:center">
+          <span class="info-msg" id="parseHint" style="font-size:11px; color:var(--ink-soft)">I'll extract details — then you confirm.</span>
+          <button class="btn sm" id="detectBtn" style="margin-left:auto">Detect</button>
+        </div>
       </div>
-      <div class="field" style="margin-bottom:12px">
-        <label for="acctEmail" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Email</label>
-        <input id="acctEmail" type="email" placeholder="you@example.com" style="margin-top:4px"/>
+    </div>
+  </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal-overlay" id="addTxModal">
+  <div class="modal-sheet" style="max-width:480px; border-top: 2px solid var(--brass)">
+    <div class="modal-head">
+      <h2 style="font-family:var(--sans); font-size:16px; font-weight:700">Record Entry</h2>
+      <button class="btn ghost sm" id="closeAddTxModalBtn">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px; overflow-y:auto; max-height:calc(90vh - 60px)">
+      <div id="manualEntryBox">
+        <!-- main fields -->
+        <div class="g4" style="gap:12px; display:grid; grid-template-columns:1fr 1fr; margin-bottom:12px">
+          <div class="field">
+            <label for="fAmt">Amount</label>
+            <input id="fAmt" type="number" step="0.01" placeholder="0.00" style="width:100%"/>
+          </div>
+          <div class="field">
+            <label for="fVendor">Vendor / note <span id="detBadge" class="badge brass" style="display:none">detected</span></label>
+            <input id="fVendor" type="text" placeholder="e.g. Swiggy" style="width:100%"/>
+          </div>
+          <div class="field">
+            <label for="fCat">Category</label>
+            <select id="fCat" style="width:100%"></select>
+          </div>
+          <div class="field">
+            <label for="fDate">Date</label>
+            <input id="fDate" type="date" style="width:100%"/>
+          </div>
+        </div>
+
+        <!-- subcategory -->
+        <div class="fsubcat-wrap" id="fSubcatWrap" style="margin-top:12px">
+          <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+            <div class="field" style="flex:1;min-width:160px">
+              <label for="fSubcat">Subcategory <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-soft)">— optional</span></label>
+              <select id="fSubcat" style="width:100%">
+                <option value="">— general / none —</option>
+              </select>
+            </div>
+            <div id="fSubcatAddWrap" style="display:none;flex:1;min-width:180px">
+              <div class="field">
+                <label for="fSubcatNewName">New subcategory name</label>
+                <div style="display:flex;gap:8px">
+                  <input id="fSubcatNewName" type="text" placeholder="e.g. Snacks" style="flex:1"/>
+                  <button class="btn sm" id="saveSubcatBtn">Add</button>
+                  <button class="btn ghost sm" id="cancelSubcatBtn">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- mcc chip -->
+        <div id="mccChipWrap" style="display:none; margin-top:12px">
+          <div class="mcc-chip" id="mccChipInner">
+            <span id="mccChipIco"></span><span id="mccChipLbl"></span><span class="x">▾ change</span>
+          </div>
+        </div>
+        <div id="mccOverride" style="display:none;margin-top:8px">
+          <select id="mccSelect" style="max-width:280px; width:100%" aria-label="Select MCC group override"></select>
+        </div>
+
+        <!-- merchant assign prompt (for unknown merchants) -->
+        <div class="merchant-assign" id="merchantAssign" style="margin-top:12px">
+          <div class="ma-head" style="font-size:11px; color:var(--ink-soft); margin-bottom:6px">📍 Unknown merchant — assign an MCC so we remember it</div>
+          <div class="ma-row" style="display:flex; flex-wrap:wrap; gap:8px">
+            <select id="maMccSelect" style="flex:1;min-width:140px" aria-label="Assign merchant MCC"></select>
+            <input type="text" id="maMccCode" maxlength="4" placeholder="MCC code (opt.)" title="Optional 4-digit MCC code" style="width:120px;font-family:var(--mono);font-size:13px;padding:8px 9px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper)"/>
+            <button class="btn sm ma-save" id="maSaveBtn">Save</button>
+            <button class="btn ghost sm" id="maDismissBtn">Skip</button>
+          </div>
+        </div>
+
+        <!-- payment mode + instrument -->
+        <div class="g2" style="margin-top:12px;gap:12px; display:grid; grid-template-columns:1fr 1fr">
+          <div class="field">
+            <label for="fMode">Payment mode</label>
+            <select id="fMode" style="width:100%">
+              <option value="upi">UPI</option>
+              <option value="credit">Credit Card</option>
+              <option value="debit">Debit Card</option>
+              <option value="cash">Cash</option>
+              <option value="netbanking">Net Banking</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div id="instrWrap"></div><!-- dynamically filled -->
+        </div>
+
+        <div class="cb-pre" id="cbPre" style="margin-top:12px"></div>
+
+        <div class="btn-row" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center">
+          <span class="err-msg" id="entryErr" style="color:var(--red); font-size:11px"></span>
+          <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+            <button class="link-btn" id="manageInstrLink" style="font-size:11px; background:none; border:none; color:var(--ink-soft); cursor:pointer">Manage instruments</button>
+            <button class="btn" id="saveEntryBtn">Save entry</button>
+          </div>
+        </div>
       </div>
-      <div class="field" style="margin-bottom:16px">
-        <label for="acctPhone" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)">Phone Number</label>
-        <input id="acctPhone" type="tel" placeholder="+91 98765 43210" style="margin-top:4px"/>
-      </div>
-      <button class="btn brass-btn" id="saveAccountBtn" style="width:100%; border-radius:50px; font-weight:700">Save Profile</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<script>
+  // Interactive UTC clock ticker
+  function updateUtcClock() {
+    const now = new Date();
+    const pad = (num) => String(num).padStart(2, '0');
+    const timeStr = pad(now.getUTCHours()) + ':' + pad(now.getUTCMinutes()) + ':' + pad(now.getUTCSeconds());
+    const clockEl = document.getElementById('utcClockTime');
+    if (clockEl) {
+      clockEl.textContent = timeStr;
+    }
+  }
+  updateUtcClock();
+  setInterval(updateUtcClock, 1000);
+</script>
 </body>
 </html>

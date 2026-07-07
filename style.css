@@ -4,50 +4,56 @@
    DESIGN SYSTEM & VARIABLES
    ═══════════════════════════════════════════════ */
 :root {
-  /* Light Theme (Obsidian Minimalist Clean Light Mode) */
-  --paper: #f8fafc;
-  --paper-rule: #f1f5f9;
-  --ink: #0f172a;
-  --ink-mid: #475569;
-  --ink-soft: #64748b;
-  --ink-faint: #cbd5e1;
-  --red: #f43f5e;
+  /* Light Theme (Fold Money Minimalist Light Mode) */
+  --paper: #ffffff;
+  --paper-rule: #f4f4f5;
+  --ink: #09090b;
+  --ink-mid: #27272a;
+  --ink-soft: #71717a;
+  --ink-faint: #e4e4e7;
+  --red: #e11d48;
   --red-bg: #fff1f2;
-  --brass: #6366f1;
-  --brass-bg: #e0e7ff;
+  --brass: #09090b; /* Stark black accent */
+  --brass-bg: #f4f4f5;
   --green: #10b981;
-  --lime: #84cc16;
-  --lime-bg: #f7fee7;
-  --line: #e2e8f0;
+  --lime: #10b981;
+  --lime-bg: #ecfdf5;
+  --line: #e4e4e7;
   --card: #ffffff;
+  --purple: #7c3aed;         /* Purple accent */
+  --purple-soft: #ede9fe;    /* Purple tint bg */
+  --purple-mid: #6d28d9;     /* Hover/active purple */
   
   /* Layout & Settings */
-  --r: 16px;
+  --r: 8px; /* Sharper modern corners */
   --mono: 'IBM Plex Mono', monospace;
   --serif: 'Inter', sans-serif;
   --sans: 'Inter', sans-serif;
   --tab-h: 68px;
-  --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Dark Theme (Obsidian Slate Minimalist) */
+/* Dark Theme (Fold Money Minimalist Dark Mode) */
 html[data-theme="dark"] {
-  --paper: #09090b;
+  --paper: #000000; /* Pure Pitch Black */
   --paper-rule: #18181b;
-  --ink: #f8fafc;
-  --ink-mid: #cbd5e1;
-  --ink-soft: #94a3b8;
+  --ink: #ffffff;
+  --ink-mid: #e4e4e7;
+  --ink-soft: #a1a1aa;
   --ink-faint: #27272a;
   --red: #f43f5e;
   --red-bg: rgba(244, 63, 94, 0.08);
-  --brass: #6366f1;
-  --brass-bg: rgba(99, 102, 241, 0.08);
+  --brass: #ffffff; /* Stark pure white accent */
+  --brass-bg: #18181b;
   --green: #10b981;
-  --lime: #84cc16;
-  --lime-bg: rgba(132, 204, 22, 0.08);
-  --line: rgba(255, 255, 255, 0.06);
-  --card: rgba(24, 24, 27, 0.45);
-  --r: 16px;
+  --lime: #10b981;
+  --lime-bg: rgba(16, 185, 129, 0.08);
+  --line: #27272a; /* Thin clean boundaries */
+  --card: #09090b; /* Pure dark sheet */
+  --purple: #a78bfa;         /* Lighter purple for dark bg */
+  --purple-soft: rgba(124, 58, 237, 0.15);
+  --purple-mid: #8b5cf6;
+  --r: 8px;
 }
 
 /* ═══════════════════════════════════════════════
@@ -64,12 +70,6 @@ html, body {
   width: 100%;
   overflow-x: hidden;
   background: var(--paper);
-  background-image: 
-    radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.03) 0%, transparent 40%),
-    radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.02) 0%, transparent 50%),
-    var(--paper);
-  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--sans);
   font-size: 14px;
@@ -205,17 +205,16 @@ a:hover {
   justify-content: space-around;
   align-items: center;
   z-index: 100;
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.06);
+  box-shadow: none;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) 12px;
-  backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--card);
   box-sizing: border-box;
   transition: background-color var(--transition), border-color var(--transition);
 }
 
 html[data-theme="dark"] .tab-bar {
-  background: rgba(23, 27, 32, 0.85);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--card);
+  border-top: 1px solid var(--line);
 }
 
 .tab-btn {
@@ -261,7 +260,7 @@ html[data-theme="dark"] .tab-bar {
 }
 
 .tab-btn.active .ico svg {
-  stroke: var(--brass) !important;
+  stroke: var(--purple) !important;
 }
 
 .tab-btn:hover {
@@ -270,7 +269,7 @@ html[data-theme="dark"] .tab-bar {
 
 .tab-btn.active {
   background: transparent !important;
-  color: var(--brass) !important;
+  color: var(--purple) !important;
   box-shadow: none !important;
 }
 
@@ -285,9 +284,9 @@ html[data-theme="dark"] .tab-bar {
   left: 20%;
   right: 20%;
   height: 3px;
-  background: var(--brass);
+  background: var(--purple);
   border-radius: 4px;
-  box-shadow: 0 0 10px var(--brass);
+  box-shadow: none;
   animation: slideWidth 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
@@ -319,7 +318,7 @@ html[data-theme="dark"] .tab-bar {
   border-radius: var(--r);
   padding: 18px;
   margin-top: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: none;
   transition: background-color var(--transition), border-color var(--transition);
 }
 
@@ -437,9 +436,9 @@ html[data-theme="dark"] select {
   transition: var(--transition);
 }
 .btn:hover {
-  background: var(--brass);
-  border-color: var(--brass);
-  color: #FFFFFA;
+  background: var(--purple-mid);
+  border-color: var(--purple-mid);
+  color: #ffffff;
 }
 .btn.ghost {
   background: transparent;
@@ -1225,8 +1224,9 @@ td.cb-cell .u {
   align-items: flex-end;
   transition: opacity 0.25s;
 }
-.modal-overlay.open {
-  display: flex;
+.modal-overlay.open,
+.modal-overlay.active {
+  display: flex !important;
 }
 .modal-sheet {
   background: var(--card);
@@ -1586,15 +1586,14 @@ html[data-theme="dark"] textarea:focus {
   outline: none;
 }
 
-/* Minimalist Accent Buttons */
+/* Minimalist Accent Buttons — purple primary */
 html[data-theme="dark"] .btn {
-  background: var(--brass);
+  background: var(--purple);
   border: none;
   color: #ffffff;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  font-size: 12px;
   padding: 10px 20px;
   border-radius: 8px;
   box-shadow: none;
@@ -1603,7 +1602,7 @@ html[data-theme="dark"] .btn {
 }
 
 html[data-theme="dark"] .btn:hover {
-  opacity: 0.9;
+  background: var(--purple-mid);
   transform: translateY(-0.5px);
 }
 
@@ -1615,9 +1614,9 @@ html[data-theme="dark"] .btn.ghost {
 }
 
 html[data-theme="dark"] .btn.ghost:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--ink-soft);
-  color: var(--ink);
+  background: var(--purple-soft);
+  border-color: var(--purple);
+  color: var(--purple);
 }
 
 /* Ledger table floating cards overhauled */
@@ -1972,6 +1971,18 @@ html[data-theme="light"] .top-stat-pill {
   font-size: 15px;
   font-weight: 700;
   color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.instr-sec-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: var(--purple);
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
 .instr-sec-sub {
@@ -1982,15 +1993,11 @@ html[data-theme="light"] .top-stat-pill {
 
 /* Horizontal scrolling track */
 .card-tile-track {
-  display: flex;
-  gap: 32px;
-  overflow-x: auto;
-  padding: 30px 10vw;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  padding: 16px 0;
   width: 100%;
-  align-items: center;
   position: relative;
   z-index: 2;
   box-sizing: border-box;
@@ -2004,16 +2011,7 @@ html[data-theme="light"] .top-stat-pill {
 }
 
 .bokeh-bg-wrapper {
-  position: absolute;
-  top: 50px;
-  bottom: 20px;
-  left: 0;
-  right: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-  border-radius: var(--r);
-  opacity: 0.8;
+  display: none !important;
 }
 
 .bokeh-light {
@@ -2032,18 +2030,15 @@ html[data-theme="light"] .top-stat-pill {
 }
 
 .card-tile-wrapper {
-  scroll-snap-align: center;
-  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.35s !important;
+  transition: none !important;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
-.card-tile-wrapper.center-card {
-  transform: scale(1.08);
-  opacity: 1;
-}
-
+.card-tile-wrapper.center-card,
 .card-tile-wrapper.side-card {
-  transform: scale(0.86);
-  opacity: 0.45;
+  transform: none !important;
+  opacity: 1 !important;
 }
 
 .card-tile-empty {
@@ -2056,30 +2051,26 @@ html[data-theme="light"] .top-stat-pill {
 /* Physical card tile */
 .card-tile {
   flex: 0 0 260px;
-  height: 155px;
-  border-radius: 18px;
-  padding: 18px 20px;
+  border-radius: var(--r) !important;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  scroll-snap-align: start;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.22s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.22s;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: none !important;
+  color: var(--ink) !important;
+  transition: border-color var(--transition);
 }
 .card-tile:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 14px 36px rgba(0,0,0,0.18);
+  border-color: var(--ink-soft) !important;
 }
 
-/* Shimmer pattern overlay */
+/* Shimmer pattern overlay (Hidden) */
 .card-tile::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -2097,23 +2088,23 @@ html[data-theme="light"] .top-stat-pill {
   font-family: var(--mono);
 }
 
-/* Colour themes per bank */
-.card-tile[data-bank="HDFC"]   { background: linear-gradient(135deg, #004C8F 0%, #0070CC 100%); color: #fff; }
-.card-tile[data-bank="ICICI"]  { background: linear-gradient(135deg, #B02020 0%, #E8432A 100%); color: #fff; }
-.card-tile[data-bank="SBI"]    { background: linear-gradient(135deg, #1A3C6E 0%, #2462A8 100%); color: #fff; }
-.card-tile[data-bank="Axis"]   { background: linear-gradient(135deg, #7B1FA2 0%, #AB47BC 100%); color: #fff; }
-.card-tile[data-bank="AMEX"]   { background: linear-gradient(135deg, #1C3A5F 0%, #26619C 100%); color: #fff; }
-.card-tile[data-bank="RuPay"]  { background: linear-gradient(135deg, #1B6B38 0%, #2E9E53 100%); color: #fff; }
-.card-tile[data-bank="Nexora"] { background: linear-gradient(135deg, #CCFF00 0%, #12C066 100%); color: #0B0E11; }
-.card-tile[data-bank="Other"]  { background: linear-gradient(135deg, #37374A 0%, #52526E 100%); color: #fff; }
-.card-tile:not([data-bank])    { background: linear-gradient(135deg, #37374A 0%, #52526E 100%); color: #fff; }
+/* Colour left borders per bank */
+.card-tile[data-bank="HDFC"]   { border-left: 4px solid #0070CC !important; }
+.card-tile[data-bank="ICICI"]  { border-left: 4px solid #E8432A !important; }
+.card-tile[data-bank="SBI"]    { border-left: 4px solid #2462A8 !important; }
+.card-tile[data-bank="Axis"]   { border-left: 4px solid #AB47BC !important; }
+.card-tile[data-bank="AMEX"]   { border-left: 4px solid #26619C !important; }
+.card-tile[data-bank="RuPay"]  { border-left: 4px solid #2E9E53 !important; }
+.card-tile[data-bank="Nexora"] { border-left: 4px solid var(--lime) !important; }
+.card-tile[data-bank="Other"],
+.card-tile:not([data-bank])    { border-left: 4px solid #71717a !important; }
 
-/* Dark Mode Minimalist Matte Overrides */
+/* Dark Mode Minimalist Overrides */
 html[data-theme="dark"] .card-tile {
-  background: rgba(20, 20, 25, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
-  color: #ffffff !important;
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: none !important;
+  color: var(--ink) !important;
 }
 html[data-theme="dark"] .card-tile[data-bank="HDFC"] { border-left: 4px solid #0070CC !important; }
 html[data-theme="dark"] .card-tile[data-bank="ICICI"] { border-left: 4px solid #E8432A !important; }
@@ -2123,7 +2114,7 @@ html[data-theme="dark"] .card-tile[data-bank="AMEX"] { border-left: 4px solid #2
 html[data-theme="dark"] .card-tile[data-bank="RuPay"] { border-left: 4px solid #2E9E53 !important; }
 html[data-theme="dark"] .card-tile[data-bank="Nexora"] { border-left: 4px solid var(--lime) !important; }
 html[data-theme="dark"] .card-tile[data-bank="Other"],
-html[data-theme="dark"] .card-tile:not([data-bank]) { border-left: 4px solid #3f3f46 !important; }
+html[data-theme="dark"] .card-tile:not([data-bank]) { border-left: 4px solid #27272a !important; }
 
 .card-tile-bank {
   font-size: 11px;
@@ -2272,5 +2263,42 @@ html[data-theme="dark"] .card-tile:not([data-bank]) { border-left: 4px solid #3f
 
 html[data-theme="dark"] .dropdown-item:hover {
   background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Ambient background glows */
+.ambient-glow-1 {
+  position: fixed;
+  top: 0;
+  left: 20%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.04);
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  display: none;
+}
+.ambient-glow-2 {
+  position: fixed;
+  top: 30%;
+  right: 20%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: rgba(168, 85, 247, 0.03);
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 0;
+  display: none;
+}
+html[data-theme="dark"] .ambient-glow-1,
+html[data-theme="dark"] .ambient-glow-2 {
+  display: none !important;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.95); }
 }
 
