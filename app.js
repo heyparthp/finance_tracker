@@ -2848,6 +2848,13 @@ function bindEvents() {
   // Telegram Syncer
   $('syncTelegramBtnInline').addEventListener('click', () => syncTelegram(false));
   $('simulateTelegramBtnInline').addEventListener('click', () => syncTelegram(true));
+  if ($('resetTgOffsetBtn')) {
+    $('resetTgOffsetBtn').addEventListener('click', () => {
+      localStorage.removeItem('tg_offset');
+      localStorage.removeItem('processedTgUpdates');
+      toast('Telegram offset reset! Next sync will fetch all recent messages.');
+    });
+  }
 
   // Detect expense details from pasted SMS
   $('detectBtn').addEventListener('click', () => {
